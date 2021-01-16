@@ -17,6 +17,8 @@ java -jar webdav-teambition-0.0.1-SNAPSHOT.jar --teambition.cookies="your cookie
 ```bash
 --teambition.cookies 
     必填，teambition官网cookies
+--server.port
+    非必填，服务器端口号，默认为8080
 ```
 
 # Chrome获取Cookies方式
