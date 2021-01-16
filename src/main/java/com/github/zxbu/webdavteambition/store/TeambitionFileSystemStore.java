@@ -22,16 +22,13 @@ import java.util.List;
 public class TeambitionFileSystemStore implements IWebdavStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(TeambitionFileSystemStore.class);
 
-    private static ApplicationContext applicationContext;
     private static TeambitionClientService teambitionClientService;
-
 
     public TeambitionFileSystemStore(File file) {
     }
 
-    public static void setApplicationContext(ApplicationContext applicationContext) {
-        TeambitionFileSystemStore.applicationContext = applicationContext;
-        TeambitionFileSystemStore.teambitionClientService = applicationContext.getBean(TeambitionClientService.class);
+    public static void setBean(TeambitionClientService teambitionClientService) {
+        TeambitionFileSystemStore.teambitionClientService = teambitionClientService;
     }
 
 

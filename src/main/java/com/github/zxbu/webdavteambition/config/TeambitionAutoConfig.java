@@ -21,7 +21,7 @@ import java.util.List;
 
 @Configuration
 @EnableConfigurationProperties(TeambitionProperties.class)
-public class TeambitionAutoConfig implements ApplicationContextAware {
+public class TeambitionAutoConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger(TeambitionAutoConfig.class);
 
     @Autowired
@@ -70,8 +70,5 @@ public class TeambitionAutoConfig implements ApplicationContextAware {
         return teambitionClient;
     }
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        TeambitionFileSystemStore.setApplicationContext(applicationContext);
-    }
+
 }

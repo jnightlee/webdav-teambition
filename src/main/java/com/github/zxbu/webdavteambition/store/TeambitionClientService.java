@@ -35,6 +35,7 @@ public class TeambitionClientService {
 
     public TeambitionClientService(TeambitionClient teambitionClient) {
         this.client = teambitionClient;
+        TeambitionFileSystemStore.setBean(this);
     }
 
     public List<TFile> getTFiles(String nodeId) {
