@@ -23,3 +23,17 @@ java -jar webdav-teambition-0.0.1-SNAPSHOT.jar --teambition.cookies="your cookie
 1. 用Chrome打开官网，保证是登录状态 https://www.teambition.com/
 2. 参考这篇百度经验 https://jingyan.baidu.com/article/0aa2237505193488cd0d647f.html
 3. 要确保完整复制看到的cookies，并在启动参数时左右加上双引号
+
+# 功能说明
+## 支持的功能
+1. 查看文件夹、查看文件
+2. 文件移动目录
+3. 文件重命名
+4. 文件下载
+5. 文件删除
+6. 文件上传（支持大文件自动分批上传）
+## 暂不支持的功能
+1. 权限校验
+2. 移动文件到其他目录的同时，修改文件名。比如 /a.zip 移动到 /b/a1.zip，是不支持的
+3. 文件上传断点续传
+4. 文件下载断点续传
