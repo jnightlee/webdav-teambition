@@ -8,9 +8,8 @@
 java -jar webdav-teambition-0.0.1-SNAPSHOT.jar --teambition.cookies="your cookies here"
 ```
 ## 容器运行
-// todo 
 ```bash
-
+docker run -d --name=webdav-teambition -p 8080:8080 zx5253/webdav-teambition:latest --teambition.cookies="your cookies here"
 ```
 
 # 参数说明
