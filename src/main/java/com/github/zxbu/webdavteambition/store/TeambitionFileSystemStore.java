@@ -88,8 +88,8 @@ public class TeambitionFileSystemStore implements IWebdavStore {
         ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = requestAttributes.getRequest();
         int contentLength = request.getContentLength();
-        if (contentLength <= 0) {
-            return 0;
+        if (contentLength < 0) {
+            contentLength = 0;
         }
         teambitionClientService.uploadPre(resourceUri, contentLength, content);
         return contentLength;
