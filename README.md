@@ -38,3 +38,4 @@ docker run -d --name=webdav-teambition -p 8080:8080 zx5253/webdav-teambition:lat
 2. 移动文件到其他目录的同时，修改文件名。比如 /a.zip 移动到 /b/a1.zip，是不支持的
 3. 文件上传断点续传
 4. 文件下载断点续传
+5. 同级目录下文件数量不能超过10000个（建议不超过100，否则性能比较差）
