@@ -7,8 +7,6 @@ import net.sf.webdav.IWebdavStore;
 import net.sf.webdav.StoredObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -16,8 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.InputStream;
 import java.security.Principal;
-import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 public class TeambitionFileSystemStore implements IWebdavStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(TeambitionFileSystemStore.class);
@@ -99,7 +96,7 @@ public class TeambitionFileSystemStore implements IWebdavStore {
     public String[] getChildrenNames(ITransaction transaction, String folderUri) {
         LOGGER.debug("getChildrenNames: {}", folderUri);
         TFile tFile = teambitionClientService.getTFileByPath(folderUri);
-        List<TFile> tFileList = teambitionClientService.getTFiles(tFile.getNodeId());
+        Set<TFile> tFileList = teambitionClientService.getTFiles(tFile.getNodeId());
         return tFileList.stream().map(TFile::getName).toArray(String[]::new);
     }
 

@@ -14,11 +14,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @Service
 public class TeambitionClientService {
@@ -36,7 +36,7 @@ public class TeambitionClientService {
         TeambitionFileSystemStore.setBean(this);
     }
 
-    public List<TFile> getTFiles(String nodeId) {
+    public Set<TFile> getTFiles(String nodeId) {
         NodeQuery nodeQuery = new NodeQuery();
         nodeQuery.setOrgId(client.getOrgId());
         nodeQuery.setOffset(0);
@@ -50,8 +50,15 @@ public class TeambitionClientService {
         ListResult<TFile> tFileListResult = JsonUtil.readValue(json, new TypeReference<ListResult<TFile>>() {
         });
         List<TFile> tFileList = tFileListResult.getData();
+        tFileList.sort(Comparator.comparing(TFile::getUpdated).reversed());
+        Set<TFile> tFileSets = new LinkedHashSet<>();
+        for (TFile tFile : tFileList) {
+            if (!tFileSets.add(tFile)) {
+                LOGGER.info("当前目录下{} 存在同名文件：{}，文件大小：{}", nodeId, tFile.getName(), tFile.getSize());
+            }
+        }
         // 对文件名进行去重，只保留最新的一个
-        return tFileList.stream().sorted(Comparator.comparing(TFile::getUpdated).reversed()).distinct().collect(Collectors.toList());
+        return tFileSets;
     }
 
 
@@ -128,6 +135,7 @@ public class TeambitionClientService {
             TFile oldFile = getNodeIdByPath2(path);
             // 如果旧文件存在，则先删除
             if (oldFile != null) {
+                LOGGER.info("旧文件{}还存在，大小为{}，进行删除操作，可前往网页版的回收站查看", path, oldFile.getSize());
                 remove(path);
             }
             RenameRequest renameRequest = new RenameRequest();
@@ -264,7 +272,7 @@ public class TeambitionClientService {
     }
 
     private TFile getNodeIdByParentId(String parentId, String name) {
-        List<TFile> tFiles = getTFiles(parentId);
+        Set<TFile> tFiles = getTFiles(parentId);
         for (TFile tFile : tFiles) {
             if (tFile.getName().equals(name)) {
                 return tFile;
