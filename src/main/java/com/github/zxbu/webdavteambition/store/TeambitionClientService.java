@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.zxbu.webdavteambition.client.TeambitionClient;
 import com.github.zxbu.webdavteambition.model.*;
+import com.github.zxbu.webdavteambition.model.result.CreateFileResult;
 import com.github.zxbu.webdavteambition.model.result.ListResult;
 import com.github.zxbu.webdavteambition.model.result.TFile;
 import com.github.zxbu.webdavteambition.model.result.UploadPreResult;
@@ -198,6 +199,7 @@ public class TeambitionClientService {
         PathInfo pathInfo = getPathInfo(path);
         TFile parent =  getTFileByPath(pathInfo.getParentPath());
         if (parent == null) {
+            LOGGER.warn("创建目录失败，未发现父级目录：{}", pathInfo.getParentPath());
             return;
         }
 
@@ -209,7 +211,18 @@ public class TeambitionClientService {
         createFileRequest.setParentId(parent.getNodeId());
         createFileRequest.setSpaceId(client.getSpaceId());
         createFileRequest.setType(FileType.folder.name());
-        client.post("/pan/api/nodes/folder", createFileRequest);
+        String json = client.post("/pan/api/nodes/folder", createFileRequest);
+        List<CreateFileResult> createFileResults = JsonUtil.readValue(json, new TypeReference<List<CreateFileResult>>() {
+        });
+        if (createFileResults.size() != 1) {
+            LOGGER.error("创建目录{}失败: {}",path, json);
+        }
+        CreateFileResult createFileResult = createFileResults.get(0);
+        if (!createFileResult.getName().equals(pathInfo.getName())) {
+            LOGGER.info("创建目录{}与原值{}不同，重命名", createFileResult.getName(), pathInfo.getName());
+            rename(pathInfo.getParentPath() + "/" + createFileResult.getName(), pathInfo.getName());
+            clearCache(pathInfo.getParentPath() + "/" + createFileResult.getName());
+        }
         clearCache(path);
     }
 
