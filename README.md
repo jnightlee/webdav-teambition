@@ -3,9 +3,9 @@
 基于此，你可以把Teambition挂载为Windows、Linux、Mac系统的磁盘，可以通过NAS系统做文件管理或文件同步，更多玩法等你挖掘
 # 如何使用
 ## Jar包运行
-[点击下载Jar包](https://github.com/zxbu/webdav-teambition/releases/download/0.0.1/webdav-teambition-0.0.1-SNAPSHOT.jar)
+[点击下载Jar包](https://github.com/zxbu/webdav-teambition/releases/download/0.0.2/webdav-teambition-0.0.2-SNAPSHOT.jar)
 ```bash
-java -jar webdav-teambition-0.0.1-SNAPSHOT.jar --teambition.cookies="your cookies here"
+java -jar webdav-teambition-0.0.2-SNAPSHOT.jar --teambition.cookies="your cookies here"
 ```
 ## 容器运行
 ```bash
@@ -38,3 +38,4 @@ docker run -d --name=webdav-teambition -p 8080:8080 zx5253/webdav-teambition:lat
 2. 移动文件到其他目录的同时，修改文件名。比如 /a.zip 移动到 /b/a1.zip，是不支持的
 3. 文件上传断点续传
 4. 文件下载断点续传
+5. 同级目录下文件数量不能超过10000个（建议不超过100，否则性能比较差）
