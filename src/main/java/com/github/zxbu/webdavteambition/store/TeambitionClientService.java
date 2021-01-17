@@ -16,11 +16,9 @@ import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 public class TeambitionClientService {
@@ -51,7 +49,9 @@ public class TeambitionClientService {
         String json = client.get("/pan/api/nodes", toMap(nodeQuery));
         ListResult<TFile> tFileListResult = JsonUtil.readValue(json, new TypeReference<ListResult<TFile>>() {
         });
-        return tFileListResult.getData();
+        List<TFile> tFileList = tFileListResult.getData();
+        // 对文件名进行去重，只保留最新的一个
+        return tFileList.stream().sorted(Comparator.comparing(TFile::getUpdated).reversed()).distinct().collect(Collectors.toList());
     }
 
 
@@ -125,6 +125,11 @@ public class TeambitionClientService {
         LOGGER.info("文件上传成功。文件名：{}", path);
         if (!uploadPreResult.getName().equals(pathInfo.getName())) {
             LOGGER.info("上传文件名{}与原文件名{}不同，对文件进行重命名", uploadPreResult.getName(), pathInfo.getName());
+            TFile oldFile = getNodeIdByPath2(path);
+            // 如果旧文件存在，则先删除
+            if (oldFile != null) {
+                remove(path);
+            }
             RenameRequest renameRequest = new RenameRequest();
             renameRequest.setCcpFileId(uploadPreResult.getCcpFileId());
             renameRequest.setDriveId(client.getDriveId());
@@ -268,6 +273,7 @@ public class TeambitionClientService {
 
         return null;
     }
+
 
     private String normalizingPath(String path) {
         path = path.replaceAll("//", "/");

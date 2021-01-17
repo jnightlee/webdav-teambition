@@ -1,6 +1,7 @@
 package com.github.zxbu.webdavteambition.model.result;
 
 import java.util.Date;
+import java.util.Objects;
 
 public class TFile {
     private String kind;
@@ -101,5 +102,20 @@ public class TFile {
 
     public void setSize(Long size) {
         this.size = size;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TFile tFile = (TFile) o;
+        return Objects.equals(kind, tFile.kind) &&
+                Objects.equals(name, tFile.name) &&
+                Objects.equals(parentId, tFile.parentId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(kind, name, parentId);
     }
 }
