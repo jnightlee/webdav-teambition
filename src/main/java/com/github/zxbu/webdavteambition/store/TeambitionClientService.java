@@ -119,7 +119,7 @@ public class TeambitionClientService {
                     return;
                 }
                 client.upload(oneUploadUrl, buffer, 0, read);
-                LOGGER.info("文件正在上传上传。文件名：{}，当前进度：{}/{}", path, (i+1), uploadUrl.size());
+                LOGGER.info("文件正在上传。文件名：{}，当前进度：{}/{}", path, (i+1), uploadUrl.size());
 
             } catch (IOException e) {
                 throw new RuntimeException(e);
