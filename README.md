@@ -4,6 +4,7 @@
 # 如何使用
 ## Jar包运行
 [点击下载Jar包](https://github.com/zxbu/webdav-teambition/releases/download/0.0.2/webdav-teambition-0.0.2-SNAPSHOT.jar)
+> 建议自己下载源码编译，以获得最新代码
 ```bash
 java -jar webdav-teambition-0.0.2-SNAPSHOT.jar --teambition.cookies="your cookies here"
 ```
