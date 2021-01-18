@@ -40,3 +40,7 @@ docker run -d --name=webdav-teambition -p 8080:8080 zx5253/webdav-teambition:lat
 3. 文件上传断点续传
 4. 文件下载断点续传
 5. 同级目录下文件数量不能超过10000个（建议不超过100，否则性能比较差）
+
+# 小白教程
+## 如何在群辉上挂载阿里Teambition或做同步盘
+https://www.yuque.com/docs/share/e4271a8a-e300-48d6-b14c-b1ab9d11a1d9
