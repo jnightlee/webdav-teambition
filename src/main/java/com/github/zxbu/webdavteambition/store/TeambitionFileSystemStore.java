@@ -84,6 +84,12 @@ public class TeambitionFileSystemStore implements IWebdavStore {
         LOGGER.info("setResourceContent {}", resourceUri);
         ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = requestAttributes.getRequest();
+        String expect = request.getHeader("Expect");
+
+        // 支持大文件上传
+        if ("100-continue".equalsIgnoreCase(expect)) {
+            return 0;
+        }
         int contentLength = request.getContentLength();
         if (contentLength < 0) {
             contentLength = 0;

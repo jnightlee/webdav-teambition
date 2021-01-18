@@ -111,17 +111,21 @@ public class TeambitionClientService {
         LOGGER.info("文件预处理成功，开始上传。文件名：{}，上传URL数量：{}", path, uploadUrl.size());
 
         byte[] buffer = new byte[chunkSize];
-        for (String oneUploadUrl : uploadUrl) {
+        for (int i = 0; i < uploadUrl.size(); i++) {
+            String oneUploadUrl = uploadUrl.get(i);
             try {
                 int read = IOUtils.read(inputStream, buffer, 0, buffer.length);
                 if (read == -1) {
                     return;
                 }
                 client.upload(oneUploadUrl, buffer, 0, read);
+                LOGGER.info("文件正在上传上传。文件名：{}，当前进度：{}/{}", path, (i+1), uploadUrl.size());
+
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
+
 
         UploadFinalRequest uploadFinalRequest = new UploadFinalRequest();
         uploadFinalRequest.setCcpFileId(uploadPreResult.getCcpFileId());
