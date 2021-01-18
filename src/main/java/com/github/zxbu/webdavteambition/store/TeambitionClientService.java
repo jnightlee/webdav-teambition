@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -29,6 +28,7 @@ public class TeambitionClientService {
     private static int chunkSize = 10485760; // 10MB
     private TFile rootTFile = null;
     private Map<String, TFile> nodeIdMap = new ConcurrentHashMap<>();
+    private Map<String, Set<TFile>> tFilesCache = new ConcurrentHashMap<>();
 
     private final TeambitionClient client;
 
@@ -38,28 +38,31 @@ public class TeambitionClientService {
     }
 
     public Set<TFile> getTFiles(String nodeId) {
-        NodeQuery nodeQuery = new NodeQuery();
-        nodeQuery.setOrgId(client.getOrgId());
-        nodeQuery.setOffset(0);
-        nodeQuery.setLimit(10000);
-        nodeQuery.setOrderBy("updateTime");
-        nodeQuery.setOrderDirection("desc");
-        nodeQuery.setDriveId(client.getDriveId());
-        nodeQuery.setSpaceId(client.getSpaceId());
-        nodeQuery.setParentId(nodeId);
-        String json = client.get("/pan/api/nodes", toMap(nodeQuery));
-        ListResult<TFile> tFileListResult = JsonUtil.readValue(json, new TypeReference<ListResult<TFile>>() {
-        });
-        List<TFile> tFileList = tFileListResult.getData();
-        tFileList.sort(Comparator.comparing(TFile::getUpdated).reversed());
-        Set<TFile> tFileSets = new LinkedHashSet<>();
-        for (TFile tFile : tFileList) {
-            if (!tFileSets.add(tFile)) {
-                LOGGER.info("当前目录下{} 存在同名文件：{}，文件大小：{}", nodeId, tFile.getName(), tFile.getSize());
+        return tFilesCache.computeIfAbsent(nodeId, key -> {
+            NodeQuery nodeQuery = new NodeQuery();
+            nodeQuery.setOrgId(client.getOrgId());
+            nodeQuery.setOffset(0);
+            nodeQuery.setLimit(10000);
+            nodeQuery.setOrderBy("updateTime");
+            nodeQuery.setOrderDirection("desc");
+            nodeQuery.setDriveId(client.getDriveId());
+            nodeQuery.setSpaceId(client.getSpaceId());
+            nodeQuery.setParentId(nodeId);
+            String json = client.get("/pan/api/nodes", toMap(nodeQuery));
+            ListResult<TFile> tFileListResult = JsonUtil.readValue(json, new TypeReference<ListResult<TFile>>() {
+            });
+            List<TFile> tFileList = tFileListResult.getData();
+            tFileList.sort(Comparator.comparing(TFile::getUpdated).reversed());
+            Set<TFile> tFileSets = new LinkedHashSet<>();
+            for (TFile tFile : tFileList) {
+                if (!tFileSets.add(tFile)) {
+                    LOGGER.info("当前目录下{} 存在同名文件：{}，文件大小：{}", nodeId, tFile.getName(), tFile.getSize());
+                }
             }
-        }
-        // 对文件名进行去重，只保留最新的一个
-        return tFileSets;
+            // 对文件名进行去重，只保留最新的一个
+            return tFileSets;
+        });
+
     }
 
 
@@ -310,5 +313,6 @@ public class TeambitionClientService {
 
     private void clearCache(String path) {
         nodeIdMap.remove(path);
+        tFilesCache.clear();
     }
 }
