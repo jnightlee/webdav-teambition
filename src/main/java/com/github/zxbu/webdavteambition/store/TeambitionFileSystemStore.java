@@ -40,6 +40,7 @@ public class TeambitionFileSystemStore implements IWebdavStore {
     @Override
     public ITransaction begin(Principal principal) {
         LOGGER.debug("begin");
+        teambitionClientService.clearCache();
         return null;
     }
 
@@ -51,6 +52,7 @@ public class TeambitionFileSystemStore implements IWebdavStore {
 
     @Override
     public void commit(ITransaction transaction) {
+        teambitionClientService.clearCache();
         LOGGER.debug("commit");
     }
 

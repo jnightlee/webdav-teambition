@@ -27,8 +27,7 @@ public class TeambitionClientService {
     private static String rootPath = "/";
     private static int chunkSize = 10485760; // 10MB
     private TFile rootTFile = null;
-    private Map<String, TFile> nodeIdMap = new ConcurrentHashMap<>();
-    private Map<String, Set<TFile>> tFilesCache = new ConcurrentHashMap<>();
+    private ThreadLocal<Map<String, Set<TFile>>> tFilesCache = new ThreadLocal<>();
 
     private final TeambitionClient client;
 
@@ -38,7 +37,12 @@ public class TeambitionClientService {
     }
 
     public Set<TFile> getTFiles(String nodeId) {
-        return tFilesCache.computeIfAbsent(nodeId, key -> {
+        Map<String, Set<TFile>> map = tFilesCache.get();
+        if (map == null) {
+            map = new ConcurrentHashMap<>();
+            tFilesCache.set(map);
+        }
+        return map.computeIfAbsent(nodeId, key -> {
             NodeQuery nodeQuery = new NodeQuery();
             nodeQuery.setOrgId(client.getOrgId());
             nodeQuery.setOffset(0);
@@ -145,6 +149,11 @@ public class TeambitionClientService {
             if (oldFile != null) {
                 LOGGER.info("旧文件{}还存在，大小为{}，进行删除操作，可前往网页版的回收站查看", path, oldFile.getSize());
                 remove(path);
+                try {
+                    Thread.sleep(1500);
+                } catch (InterruptedException e) {
+                    // no
+                }
             }
             RenameRequest renameRequest = new RenameRequest();
             renameRequest.setCcpFileId(uploadPreResult.getCcpFileId());
@@ -153,7 +162,7 @@ public class TeambitionClientService {
             renameRequest.setName(pathInfo.getName());
             client.put("/pan/api/nodes/" + parent.getNodeId(), renameRequest);
         }
-        clearCache(path);
+        clearCache();
     }
 
     public void rename(String sourcePath, String newName) {
@@ -165,7 +174,7 @@ public class TeambitionClientService {
         renameRequest.setOrgId(client.getOrgId());
         renameRequest.setName(newName);
         client.put("/pan/api/nodes/" + tFile.getParentId(), renameRequest);
-        clearCache(sourcePath);
+        clearCache();
     }
 
     public void move(String sourcePath, String targetPath) {
@@ -183,8 +192,8 @@ public class TeambitionClientService {
         moveRequestId.setId(sourceTFile.getNodeId());
         moveRequest.setIds(Collections.singletonList(moveRequestId));
         client.post("/pan/api/nodes/move", moveRequest);
-        clearCache(sourcePath);
-        clearCache(targetPath);
+        clearCache();
+        clearCache();
     }
 
     public void remove(String path) {
@@ -197,7 +206,7 @@ public class TeambitionClientService {
         removeRequest.setOrgId(client.getOrgId());
         removeRequest.setNodeIds(Collections.singletonList(tFile.getNodeId()));
         client.post("/pan/api/nodes/archive", removeRequest);
-        clearCache(path);
+        clearCache();
     }
 
 
@@ -228,16 +237,16 @@ public class TeambitionClientService {
         if (!createFileResult.getName().equals(pathInfo.getName())) {
             LOGGER.info("创建目录{}与原值{}不同，重命名", createFileResult.getName(), pathInfo.getName());
             rename(pathInfo.getParentPath() + "/" + createFileResult.getName(), pathInfo.getName());
-            clearCache(pathInfo.getParentPath() + "/" + createFileResult.getName());
+            clearCache();
         }
-        clearCache(path);
+        clearCache();
     }
 
 
     public TFile getTFileByPath(String path) {
         path = normalizingPath(path);
 
-        return nodeIdMap.computeIfAbsent(path, this::getNodeIdByPath2);
+        return getNodeIdByPath2(path);
     }
 
     public InputStream download(String path) {
@@ -311,8 +320,11 @@ public class TeambitionClientService {
         return path;
     }
 
-    private void clearCache(String path) {
-        nodeIdMap.remove(path);
-        tFilesCache.clear();
+    public void clearCache() {
+        Map<String, Set<TFile>> map = tFilesCache.get();
+        if (map != null) {
+            map.clear();
+        }
+
     }
 }
