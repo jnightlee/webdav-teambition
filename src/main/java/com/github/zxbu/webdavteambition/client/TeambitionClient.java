@@ -2,6 +2,7 @@ package com.github.zxbu.webdavteambition.client;
 
 import com.github.zxbu.webdavteambition.config.TeambitionProperties;
 import com.github.zxbu.webdavteambition.util.JsonUtil;
+import net.sf.webdav.exceptions.WebdavException;
 import okhttp3.*;
 import okio.BufferedSink;
 import org.slf4j.Logger;
@@ -69,7 +70,7 @@ public class TeambitionClient {
             response = okHttpClient.newCall(request).execute();
             return response.body().byteStream();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new WebdavException(e);
         }
     }
 
@@ -81,10 +82,10 @@ public class TeambitionClient {
             LOGGER.info("post {}, code {}", url, response.code());
             if (!response.isSuccessful()) {
                 LOGGER.error("请求失败，url={}, code={}, body={}", url, response.code(), response.body().string());
-                throw new RuntimeException("请求失败：" + url);
+                throw new WebdavException("请求失败：" + url);
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new WebdavException(e);
         }
     }
 
@@ -96,11 +97,11 @@ public class TeambitionClient {
             LOGGER.info("post {}, code {}", url, response.code());
             if (!response.isSuccessful()) {
                 LOGGER.error("请求失败，url={}, code={}, body={}", url, response.code(), response.body().string());
-                throw new RuntimeException("请求失败：" + url);
+                throw new WebdavException("请求失败：" + url);
             }
             return toString(response.body());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new WebdavException(e);
         }
     }
 
@@ -112,11 +113,11 @@ public class TeambitionClient {
             LOGGER.info("put {}, code {}", url, response.code());
             if (!response.isSuccessful()) {
                 LOGGER.error("请求失败，url={}, code={}, body={}", url, response.code(), response.body().string());
-                throw new RuntimeException("请求失败：" + url);
+                throw new WebdavException("请求失败：" + url);
             }
             return toString(response.body());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new WebdavException(e);
         }
     }
 
@@ -129,13 +130,13 @@ public class TeambitionClient {
             try (Response response = okHttpClient.newCall(request).execute()){
                 LOGGER.info("get {}, code {}", urlBuilder.build(), response.code());
                 if (!response.isSuccessful()) {
-                    throw new RuntimeException("请求失败：" + urlBuilder.build().toString());
+                    throw new WebdavException("请求失败：" + urlBuilder.build().toString());
                 }
                 return toString(response.body());
             }
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new WebdavException(e);
         }
 
     }

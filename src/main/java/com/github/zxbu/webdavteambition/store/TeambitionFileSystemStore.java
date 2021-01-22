@@ -5,6 +5,7 @@ import com.github.zxbu.webdavteambition.model.result.TFile;
 import net.sf.webdav.ITransaction;
 import net.sf.webdav.IWebdavStore;
 import net.sf.webdav.StoredObject;
+import net.sf.webdav.exceptions.WebdavException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -140,7 +141,7 @@ public class TeambitionFileSystemStore implements IWebdavStore {
             teambitionClientService.move(sourcePath, destinationPathInfo.getParentPath());
         } else {
             if (!destinationPathInfo.getParentPath().equals(sourcePathInfo.getParentPath())) {
-                throw new RuntimeException("不支持目录和名字同时修改");
+                throw new WebdavException("不支持目录和名字同时修改");
             }
             // 名字不同，说明是修改名字。不考虑目录和名字同时修改的情况
             teambitionClientService.rename(sourcePath, destinationPathInfo.getName());

@@ -1,13 +1,12 @@
 package com.github.zxbu.webdavteambition.util;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.sf.webdav.exceptions.WebdavException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,7 +19,7 @@ public class JsonUtil {
         try {
             return objectMapper.writeValueAsString(o);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new WebdavException(e);
         }
     }
 
@@ -28,7 +27,7 @@ public class JsonUtil {
         try {
             return objectMapper.readValue(json, valueTypeRef);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new WebdavException(e);
         }
     }
 
@@ -37,7 +36,7 @@ public class JsonUtil {
         try {
             return objectMapper.readValue(json, valueType);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new WebdavException(e);
         }
     }
 
@@ -65,7 +64,7 @@ public class JsonUtil {
             }
             return objectMapper.treeToValue(jsonNode, Object.class);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new WebdavException(e);
         }
     }
 
@@ -115,7 +114,7 @@ public class JsonUtil {
         try {
             return objectMapper.readTree(responseBody);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new WebdavException(e);
         }
     }
 

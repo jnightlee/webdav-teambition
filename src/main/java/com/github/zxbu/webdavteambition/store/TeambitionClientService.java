@@ -9,6 +9,7 @@ import com.github.zxbu.webdavteambition.model.result.ListResult;
 import com.github.zxbu.webdavteambition.model.result.TFile;
 import com.github.zxbu.webdavteambition.model.result.UploadPreResult;
 import com.github.zxbu.webdavteambition.util.JsonUtil;
+import net.sf.webdav.exceptions.WebdavException;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +84,7 @@ public class TeambitionClientService {
             });
             return stringMap;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new WebdavException(e);
         }
     }
 
@@ -129,7 +130,7 @@ public class TeambitionClientService {
                 LOGGER.info("文件正在上传。文件名：{}，当前进度：{}/{}", path, (i+1), uploadUrl.size());
 
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new WebdavException(e);
             }
         }
 
