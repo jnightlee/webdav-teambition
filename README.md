@@ -3,10 +3,10 @@
 基于此，你可以把Teambition挂载为Windows、Linux、Mac系统的磁盘，可以通过NAS系统做文件管理或文件同步，更多玩法等你挖掘
 # 如何使用
 ## Jar包运行
-[点击下载Jar包](https://github.com/zxbu/webdav-teambition/releases/download/0.0.2/webdav-teambition-0.0.2-SNAPSHOT.jar)
+[点击下载Jar包](https://github.com/zxbu/webdav-teambition/releases/latest)
 > 建议自己下载源码编译，以获得最新代码
 ```bash
-java -jar webdav-teambition-0.0.2-SNAPSHOT.jar --teambition.cookies="your cookies here"
+java -jar webdav-teambition.jar --teambition.cookies="your cookies here"
 ```
 ## 容器运行
 ```bash
@@ -20,6 +20,8 @@ docker run -d --name=webdav-teambition -p 8080:8080 zx5253/webdav-teambition:lat
 --server.port
     非必填，服务器端口号，默认为8080
 ```
+# QQ群
+> 群号：789738128
 
 # Chrome获取Cookies方式
 1. 用Chrome打开官网，保证是登录状态 https://www.teambition.com/
