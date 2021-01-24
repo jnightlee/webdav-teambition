@@ -4,15 +4,18 @@ import com.github.zxbu.webdavteambition.config.TeambitionProperties;
 import com.github.zxbu.webdavteambition.util.JsonUtil;
 import net.sf.webdav.exceptions.WebdavException;
 import okhttp3.*;
-import okio.BufferedSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TeambitionClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(TeambitionClient.class);
@@ -24,7 +27,30 @@ public class TeambitionClient {
         this.teambitionProperties = teambitionProperties;
     }
 
+    private void login() {
+        if (StringUtils.hasLength(teambitionProperties.getCookies())) {
+            return;
+        }
+        Assert.hasLength(teambitionProperties.getUserName(), "没有输入用户名");
+        Assert.hasLength(teambitionProperties.getPassword(), "没有输入密码");
+        String loginHtml = get("https://account.teambition.com/login/password", Collections.emptyMap());
+        Pattern pattern = Pattern.compile("\"TOKEN\":\"(\\S+?)\"");
+        Matcher matcher = pattern.matcher(loginHtml);
+        Assert.isTrue(matcher.find(), "未找到Token");
+        String token = matcher.group(1);
+        Map<String, Object> login = new LinkedHashMap<>();
+        login.put("client_id", "90727510-5e9f-11e6-bf41-15ed35b6cc41");
+        login.put("password", teambitionProperties.getPassword());
+        login.put("phone", teambitionProperties.getUserName());
+        login.put("token", token);
+        login.put("response_type", "session");
+        String loginResult = post("https://account.teambition.com/api/login/phone", login);
+        String name = (String) JsonUtil.getJsonNodeValue(loginResult, "user.name");
+        LOGGER.info("{} 登录成功", name);
+    }
+
     public void init() {
+        login();
         if (getOrgId() == null || getRootId() == null || getDriveId() == null || getSpaceId() == null) {
             String personalJson = get("https://www.teambition.com/api/organizations/personal", Collections.emptyMap());
             String orgId = (String) JsonUtil.getJsonNodeValue(personalJson, "_id");

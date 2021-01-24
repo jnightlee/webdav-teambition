@@ -2,21 +2,26 @@
 本项目实现了阿里Teambition网盘的webdav协议，只需要简单的配置一下cookies，就可以让Teambition变身为webdav协议的文件服务器。
 基于此，你可以把Teambition挂载为Windows、Linux、Mac系统的磁盘，可以通过NAS系统做文件管理或文件同步，更多玩法等你挖掘
 # 如何使用
+支持两种登录方式：指定cookies或账号密码方式。具体看参数说明
 ## Jar包运行
 [点击下载Jar包](https://github.com/zxbu/webdav-teambition/releases/latest)
 > 建议自己下载源码编译，以获得最新代码
 ```bash
-java -jar webdav-teambition.jar --teambition.cookies="your cookies here"
+java -jar webdav-teambition.jar --teambition.userName="your userName" --teambition.password="your password"
 ```
 ## 容器运行
 ```bash
-docker run -d --name=webdav-teambition -p 8080:8080 zx5253/webdav-teambition:latest --teambition.cookies="your cookies here"
+docker run -d --name=webdav-teambition -p 8080:8080 zx5253/webdav-teambition:latest  --teambition.userName="your userName" --teambition.password="your password"
 ```
 
 # 参数说明
 ```bash
 --teambition.cookies 
-    必填，teambition官网cookies
+    如果采用指定cookies登录，此项必填，teambition官网cookies
+--teambition.userName 
+    如果采用账号密码登录，此项必填，你的手机号
+--teambition.password 
+    如果采用账号密码登录，此项必填，你的明文密码
 --server.port
     非必填，服务器端口号，默认为8080
 ```

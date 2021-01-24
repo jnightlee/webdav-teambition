@@ -1,17 +1,15 @@
 package com.github.zxbu.webdavteambition.config;
 
 import com.github.zxbu.webdavteambition.client.TeambitionClient;
-import com.github.zxbu.webdavteambition.store.TeambitionFileSystemStore;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
@@ -41,34 +39,35 @@ public class TeambitionAutoConfig {
                 return chain.proceed(request);
             }
         }).cookieJar(new CookieJar() {
+            private List<Cookie> cookies = Collections.emptyList();
+
             @Override
             public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
-                if (StringUtils.hasLength(teambitionProperties.getCookies())) {
-                    //  do nothing
+                if (!StringUtils.hasLength(teambitionProperties.getCookies())) {
+                    this.cookies = cookies;
                 }
             }
 
             @Override
             public List<Cookie> loadForRequest(HttpUrl url) {
-                String cookies = teambitionProperties.getCookies();
-                String[] cookieSplit = cookies.split("; ");
-                List<Cookie> cookieList = new ArrayList<>(cookieSplit.length);
-                for (String cookie : cookieSplit) {
-                    Cookie parse = Cookie.parse(url, cookie);
-                    cookieList.add(parse);
+                String cookiesStr = teambitionProperties.getCookies();
+                if (CollectionUtils.isEmpty(this.cookies) && StringUtils.hasLength(cookiesStr)) {
+                    String[] cookieSplit = cookiesStr.split("; ");
+                    List<Cookie> cookieList = new ArrayList<>(cookieSplit.length);
+                    for (String cookie : cookieSplit) {
+                        Cookie parse = Cookie.parse(url, cookie);
+                        cookieList.add(parse);
+                    }
+                    this.cookies = cookieList;
                 }
-                return cookieList;
+                return this.cookies;
             }
         }).build();
         TeambitionClient teambitionClient = new TeambitionClient(okHttpClient, teambitionProperties);
-        try (Response response = okHttpClient.newCall(new Request.Builder().get().url(teambitionProperties.getUrl() + "/pan/api").build()).execute()) {
-            if (response.isSuccessful()) {
-                LOGGER.info("TeambitionClient 启动成功");
-            }
-        }
         teambitionClient.init();
         return teambitionClient;
     }
+
 
 
 }

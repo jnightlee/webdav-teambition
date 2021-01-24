@@ -11,6 +11,8 @@ public class TeambitionProperties {
     private String driveId;
     private String spaceId;
     private String rootId;
+    private String userName;
+    private String password;
 
     public String getUrl() {
         return url;
@@ -62,6 +64,22 @@ public class TeambitionProperties {
 
     public String getRootId() {
         return rootId;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public void setRootId(String rootId) {
