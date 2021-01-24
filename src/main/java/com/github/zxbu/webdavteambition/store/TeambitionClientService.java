@@ -174,7 +174,7 @@ public class TeambitionClientService {
         renameRequest.setDriveId(client.getDriveId());
         renameRequest.setOrgId(client.getOrgId());
         renameRequest.setName(newName);
-        client.put("/pan/api/nodes/" + tFile.getParentId(), renameRequest);
+        client.put("/pan/api/nodes/" + tFile.getNodeId(), renameRequest);
         clearCache();
     }
 
