@@ -1,5 +1,6 @@
 package com.github.zxbu.webdavteambition.store;
 
+import com.github.zxbu.webdavteambition.model.FileType;
 import com.github.zxbu.webdavteambition.model.PathInfo;
 import com.github.zxbu.webdavteambition.model.result.TFile;
 import net.sf.webdav.ITransaction;
@@ -107,6 +108,9 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
     public String[] getChildrenNames(ITransaction transaction, String folderUri) {
         LOGGER.debug("getChildrenNames: {}", folderUri);
         TFile tFile = aliYunDriverClientService.getTFileByPath(folderUri);
+        if (tFile.getType().equals(FileType.file.name())) {
+            return new String[0];
+        }
         Set<TFile> tFileList = aliYunDriverClientService.getTFiles(tFile.getFile_id());
         return tFileList.stream().map(TFile::getName).toArray(String[]::new);
     }

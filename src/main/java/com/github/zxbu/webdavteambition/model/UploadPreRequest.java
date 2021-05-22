@@ -5,7 +5,7 @@ import java.util.List;
 public class UploadPreRequest {
     private String check_name_mode = "refuse";
     private String content_hash;
-    private String content_hash_name = "sha1";
+    private String content_hash_name = "none";
     private String drive_id;
     private String name;
     private String parent_file_id;

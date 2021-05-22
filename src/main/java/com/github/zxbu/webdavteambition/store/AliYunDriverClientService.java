@@ -93,10 +93,17 @@ public class AliYunDriverClientService {
         if (parent == null) {
             return;
         }
+        // 如果已存在，先删除
+        TFile tfile = getTFileByPath(path);
+        if (tfile != null) {
+            remove(path);
+        }
+
+
         int chunkCount = (int) Math.ceil(((double) size) / chunkSize); // 进1法
 
         UploadPreRequest uploadPreRequest = new UploadPreRequest();
-        uploadPreRequest.setContent_hash(UUID.randomUUID().toString());
+//        uploadPreRequest.setContent_hash(UUID.randomUUID().toString());
         uploadPreRequest.setDrive_id(client.getDriveId());
         uploadPreRequest.setName(pathInfo.getName());
         uploadPreRequest.setParent_file_id(parent.getFile_id());
