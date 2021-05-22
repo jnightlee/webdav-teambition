@@ -1,7 +1,6 @@
 package com.github.zxbu.webdavteambition;
 
-import com.github.zxbu.webdavteambition.store.TeambitionFileSystemStore;
-import net.sf.webdav.LocalFileSystemStore;
+import com.github.zxbu.webdavteambition.store.AliYunDriverFileSystemStore;
 import net.sf.webdav.WebdavServlet;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -24,7 +23,7 @@ public class WebdavTeambitionApplication {
     public ServletRegistrationBean<WebdavServlet> myServlet(){
         ServletRegistrationBean<WebdavServlet> servletRegistrationBean = new ServletRegistrationBean<>(new WebdavServlet(), "/*");
         Map<String, String> inits = new LinkedHashMap<>();
-        inits.put("ResourceHandlerImplementation", TeambitionFileSystemStore.class.getName());
+        inits.put("ResourceHandlerImplementation", AliYunDriverFileSystemStore.class.getName());
 //        inits.put("ResourceHandlerImplementation", LocalFileSystemStore.class.getName());
         inits.put("rootpath", "./");
         inits.put("storeDebug", "1");

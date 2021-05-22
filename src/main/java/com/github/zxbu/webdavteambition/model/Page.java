@@ -3,8 +3,8 @@ package com.github.zxbu.webdavteambition.model;
 public class Page {
     private int offset;
     private int limit;
-    private String orderBy;
-    private String orderDirection;
+    private String order_by;
+    private String order_direction;
 
     public int getOffset() {
         return offset;
@@ -22,19 +22,19 @@ public class Page {
         this.limit = limit;
     }
 
-    public String getOrderBy() {
-        return orderBy;
+    public String getOrder_by() {
+        return order_by;
     }
 
-    public void setOrderBy(String orderBy) {
-        this.orderBy = orderBy;
+    public void setOrder_by(String order_by) {
+        this.order_by = order_by;
     }
 
-    public String getOrderDirection() {
-        return orderDirection;
+    public String getOrder_direction() {
+        return order_direction;
     }
 
-    public void setOrderDirection(String orderDirection) {
-        this.orderDirection = orderDirection;
+    public void setOrder_direction(String order_direction) {
+        this.order_direction = order_direction;
     }
 }

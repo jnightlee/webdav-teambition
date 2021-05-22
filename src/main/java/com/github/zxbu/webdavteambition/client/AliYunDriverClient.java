@@ -1,12 +1,11 @@
 package com.github.zxbu.webdavteambition.client;
 
-import com.github.zxbu.webdavteambition.config.TeambitionProperties;
+import com.github.zxbu.webdavteambition.config.AliYunDriveProperties;
 import com.github.zxbu.webdavteambition.util.JsonUtil;
 import net.sf.webdav.exceptions.WebdavException;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
@@ -14,80 +13,39 @@ import java.io.InputStream;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class TeambitionClient {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TeambitionClient.class);
+public class AliYunDriverClient {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AliYunDriverClient.class);
     private OkHttpClient okHttpClient;
-    private TeambitionProperties teambitionProperties;
+    private AliYunDriveProperties aliYunDriveProperties;
 
-    public TeambitionClient(OkHttpClient okHttpClient, TeambitionProperties teambitionProperties) {
+    public AliYunDriverClient(OkHttpClient okHttpClient, AliYunDriveProperties aliYunDriveProperties) {
         this.okHttpClient = okHttpClient;
-        this.teambitionProperties = teambitionProperties;
+        this.aliYunDriveProperties = aliYunDriveProperties;
     }
 
     private void login() {
-        if (StringUtils.hasLength(teambitionProperties.getCookies())) {
+        if (StringUtils.hasLength(aliYunDriveProperties.getAuthorization())) {
             return;
         }
-        Assert.hasLength(teambitionProperties.getUserName(), "没有输入用户名");
-        Assert.hasLength(teambitionProperties.getPassword(), "没有输入密码");
-        String loginHtml = get("https://account.teambition.com/login/password", Collections.emptyMap());
-        Pattern pattern = Pattern.compile("\"TOKEN\":\"(\\S+?)\"");
-        Matcher matcher = pattern.matcher(loginHtml);
-        Assert.isTrue(matcher.find(), "未找到Token");
-        String token = matcher.group(1);
-        Map<String, Object> login = new LinkedHashMap<>();
-        login.put("client_id", "90727510-5e9f-11e6-bf41-15ed35b6cc41");
-        login.put("password", teambitionProperties.getPassword());
-        login.put("phone", teambitionProperties.getUserName());
-        login.put("token", token);
-        login.put("response_type", "session");
-        String loginResult = post("https://account.teambition.com/api/login/phone", login);
-        String name = (String) JsonUtil.getJsonNodeValue(loginResult, "user.name");
-        LOGGER.info("{} 登录成功", name);
+
+        // todo 暂不支持登录功能
     }
 
     public void init() {
         login();
-        if (getOrgId() == null || getRootId() == null || getDriveId() == null || getSpaceId() == null) {
-            String personalJson = get("https://www.teambition.com/api/organizations/personal", Collections.emptyMap());
-            String orgId = (String) JsonUtil.getJsonNodeValue(personalJson, "_id");
-            teambitionProperties.setOrgId(orgId);
-            String memberId = (String) JsonUtil.getJsonNodeValue(personalJson, "_creatorId");
-
-            String orgJson = get("/pan/api/orgs/" + orgId, Collections.singletonMap("orgId", orgId));
-            String driveId = (String) JsonUtil.getJsonNodeValue(orgJson, "data.driveId");
-            teambitionProperties.setDriveId(driveId);
-
-            Map<String, String> params = new LinkedHashMap<>();
-            params.put("orgId", orgId);
-            params.put("memberId", memberId);
-            String spacesJson = get("/pan/api/spaces", params);
-            String rootId = (String) JsonUtil.getJsonNodeValue(spacesJson, "[0].rootId");
-            String spaceId = (String) JsonUtil.getJsonNodeValue(spacesJson, "[0].spaceId");
-            teambitionProperties.setRootId(rootId);
-            teambitionProperties.setSpaceId(spaceId);
+        if (getDriveId() == null) {
+            String personalJson = post("/user/get", Collections.emptyMap());
+            String driveId = (String) JsonUtil.getJsonNodeValue(personalJson, "default_drive_id");
+            aliYunDriveProperties.setDriveId(driveId);
         }
     }
 
 
-    public String getOrgId() {
-        return teambitionProperties.getOrgId();
-    }
-
     public String getDriveId() {
-        return teambitionProperties.getDriveId();
+        return aliYunDriveProperties.getDriveId();
     }
 
-    public String getSpaceId() {
-        return teambitionProperties.getSpaceId();
-    }
-
-    public String getRootId() {
-        return teambitionProperties.getRootId();
-    }
 
     public InputStream download(String url) {
         Request request = new Request.Builder().url(url).build();
@@ -116,11 +74,12 @@ public class TeambitionClient {
     }
 
     public String post(String url, Object body) {
+        String bodyAsJson = JsonUtil.toJson(body);
         Request request = new Request.Builder()
-                .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(body)))
+                .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), bodyAsJson))
                 .url(getTotalUrl(url)).build();
         try (Response response = okHttpClient.newCall(request).execute()){
-            LOGGER.info("post {}, code {}", url, response.code());
+            LOGGER.info("post {}, body {}, code {}", url, bodyAsJson, response.code());
             if (!response.isSuccessful()) {
                 LOGGER.error("请求失败，url={}, code={}, body={}", url, response.code(), response.body().string());
                 throw new WebdavException("请求失败：" + url);
@@ -178,6 +137,6 @@ public class TeambitionClient {
         if (url.startsWith("http")) {
             return url;
         }
-        return teambitionProperties.getUrl() + url;
+        return aliYunDriveProperties.getUrl() + url;
     }
 }

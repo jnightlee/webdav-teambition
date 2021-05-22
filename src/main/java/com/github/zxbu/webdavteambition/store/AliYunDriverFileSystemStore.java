@@ -17,16 +17,16 @@ import java.io.InputStream;
 import java.security.Principal;
 import java.util.Set;
 
-public class TeambitionFileSystemStore implements IWebdavStore {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TeambitionFileSystemStore.class);
+public class AliYunDriverFileSystemStore implements IWebdavStore {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AliYunDriverFileSystemStore.class);
 
-    private static TeambitionClientService teambitionClientService;
+    private static AliYunDriverClientService aliYunDriverClientService;
 
-    public TeambitionFileSystemStore(File file) {
+    public AliYunDriverFileSystemStore(File file) {
     }
 
-    public static void setBean(TeambitionClientService teambitionClientService) {
-        TeambitionFileSystemStore.teambitionClientService = teambitionClientService;
+    public static void setBean(AliYunDriverClientService aliYunDriverClientService) {
+        AliYunDriverFileSystemStore.aliYunDriverClientService = aliYunDriverClientService;
     }
 
 
@@ -41,7 +41,7 @@ public class TeambitionFileSystemStore implements IWebdavStore {
     @Override
     public ITransaction begin(Principal principal) {
         LOGGER.debug("begin");
-        teambitionClientService.clearCache();
+        aliYunDriverClientService.clearCache();
         return null;
     }
 
@@ -53,7 +53,7 @@ public class TeambitionFileSystemStore implements IWebdavStore {
 
     @Override
     public void commit(ITransaction transaction) {
-        teambitionClientService.clearCache();
+        aliYunDriverClientService.clearCache();
         LOGGER.debug("commit");
     }
 
@@ -67,7 +67,7 @@ public class TeambitionFileSystemStore implements IWebdavStore {
     public void createFolder(ITransaction transaction, String folderUri) {
         LOGGER.info("createFolder {}", folderUri);
 
-        teambitionClientService.createFolder(folderUri);
+        aliYunDriverClientService.createFolder(folderUri);
     }
 
     @Override
@@ -79,7 +79,7 @@ public class TeambitionFileSystemStore implements IWebdavStore {
     @Override
     public InputStream getResourceContent(ITransaction transaction, String resourceUri) {
         LOGGER.debug("getResourceContent: {}", resourceUri);
-        return teambitionClientService.download(resourceUri);
+        return aliYunDriverClientService.download(resourceUri);
     }
 
     @Override
@@ -99,15 +99,15 @@ public class TeambitionFileSystemStore implements IWebdavStore {
                 return 0;
             }
         }
-        teambitionClientService.uploadPre(resourceUri, contentLength, content);
+        aliYunDriverClientService.uploadPre(resourceUri, contentLength, content);
         return contentLength;
     }
 
     @Override
     public String[] getChildrenNames(ITransaction transaction, String folderUri) {
         LOGGER.debug("getChildrenNames: {}", folderUri);
-        TFile tFile = teambitionClientService.getTFileByPath(folderUri);
-        Set<TFile> tFileList = teambitionClientService.getTFiles(tFile.getNodeId());
+        TFile tFile = aliYunDriverClientService.getTFileByPath(folderUri);
+        Set<TFile> tFileList = aliYunDriverClientService.getTFiles(tFile.getFile_id());
         return tFileList.stream().map(TFile::getName).toArray(String[]::new);
     }
 
@@ -116,7 +116,7 @@ public class TeambitionFileSystemStore implements IWebdavStore {
     @Override
     public long getResourceLength(ITransaction transaction, String path) {
         LOGGER.debug("getResourceLength: {}", path);
-        TFile tFile = teambitionClientService.getTFileByPath(path);
+        TFile tFile = aliYunDriverClientService.getTFileByPath(path);
         if (tFile == null || tFile.getSize() == null) {
             return 384;
         }
@@ -127,24 +127,24 @@ public class TeambitionFileSystemStore implements IWebdavStore {
     @Override
     public void removeObject(ITransaction transaction, String uri) {
         LOGGER.info("removeObject: {}", uri);
-        teambitionClientService.remove(uri);
+        aliYunDriverClientService.remove(uri);
     }
 
     @Override
     public boolean moveObject(ITransaction transaction, String destinationPath, String sourcePath) {
         LOGGER.info("moveObject, destinationPath={}, sourcePath={}", destinationPath, sourcePath);
 
-        PathInfo destinationPathInfo = teambitionClientService.getPathInfo(destinationPath);
-        PathInfo sourcePathInfo = teambitionClientService.getPathInfo(sourcePath);
+        PathInfo destinationPathInfo = aliYunDriverClientService.getPathInfo(destinationPath);
+        PathInfo sourcePathInfo = aliYunDriverClientService.getPathInfo(sourcePath);
         // 名字相同，说明是移动目录
         if (sourcePathInfo.getName().equals(destinationPathInfo.getName())) {
-            teambitionClientService.move(sourcePath, destinationPathInfo.getParentPath());
+            aliYunDriverClientService.move(sourcePath, destinationPathInfo.getParentPath());
         } else {
             if (!destinationPathInfo.getParentPath().equals(sourcePathInfo.getParentPath())) {
                 throw new WebdavException("不支持目录和名字同时修改");
             }
             // 名字不同，说明是修改名字。不考虑目录和名字同时修改的情况
-            teambitionClientService.rename(sourcePath, destinationPathInfo.getName());
+            aliYunDriverClientService.rename(sourcePath, destinationPathInfo.getName());
         }
         return true;
     }
@@ -152,13 +152,13 @@ public class TeambitionFileSystemStore implements IWebdavStore {
     @Override
     public StoredObject getStoredObject(ITransaction transaction, String uri) {
         LOGGER.debug("getStoredObject: {}", uri);
-        TFile tFile = teambitionClientService.getTFileByPath(uri);
+        TFile tFile = aliYunDriverClientService.getTFileByPath(uri);
         if (tFile != null) {
             StoredObject so = new StoredObject();
-            so.setFolder(tFile.getKind().equalsIgnoreCase("folder"));
+            so.setFolder(tFile.getType().equalsIgnoreCase("folder"));
             so.setResourceLength(getResourceLength(transaction, uri));
-            so.setCreationDate(tFile.getCreated());
-            so.setLastModified(tFile.getUpdated());
+            so.setCreationDate(tFile.getCreated_at());
+            so.setLastModified(tFile.getUpdated_at());
             return so;
         }
 
