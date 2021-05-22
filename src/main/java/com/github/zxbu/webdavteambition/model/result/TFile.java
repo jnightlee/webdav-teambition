@@ -11,6 +11,7 @@ public class TFile {
     private String file_id;
     private Boolean hidden;
     private String name;
+    private String file_name;
     private String parent_file_id;
     private String starred;
     private String status;
@@ -134,6 +135,14 @@ public class TFile {
 
     public void setDownload_url(String download_url) {
         this.download_url = download_url;
+    }
+
+    public String getFile_name() {
+        return file_name;
+    }
+
+    public void setFile_name(String file_name) {
+        this.file_name = file_name;
     }
 
     public void setUpdated_at(Date updated_at) {

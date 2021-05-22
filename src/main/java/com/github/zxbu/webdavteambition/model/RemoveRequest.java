@@ -3,22 +3,22 @@ package com.github.zxbu.webdavteambition.model;
 import java.util.List;
 
 public class RemoveRequest {
-    private String orgId;
-    private List<String> nodeIds;
+    private String drive_id;
+    private String file_id;
 
-    public List<String> getNodeIds() {
-        return nodeIds;
+    public String getDrive_id() {
+        return drive_id;
     }
 
-    public void setNodeIds(List<String> nodeIds) {
-        this.nodeIds = nodeIds;
+    public void setDrive_id(String drive_id) {
+        this.drive_id = drive_id;
     }
 
-    public String getOrgId() {
-        return orgId;
+    public String getFile_id() {
+        return file_id;
     }
 
-    public void setOrgId(String orgId) {
-        this.orgId = orgId;
+    public void setFile_id(String file_id) {
+        this.file_id = file_id;
     }
 }

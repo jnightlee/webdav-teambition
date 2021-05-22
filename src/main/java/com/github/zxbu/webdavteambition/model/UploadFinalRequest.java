@@ -1,49 +1,31 @@
 package com.github.zxbu.webdavteambition.model;
 
 public class UploadFinalRequest {
-    private String ccpFileId;
-    private String driveId;
-    private String nodeId;
-    private String orgId;
-    private String uploadId;
+    private String drive_id;
+    private String file_id;
+    private String upload_id;
 
-    public String getDriveId() {
-        return driveId;
+    public String getDrive_id() {
+        return drive_id;
     }
 
-    public void setDriveId(String driveId) {
-        this.driveId = driveId;
+    public void setDrive_id(String drive_id) {
+        this.drive_id = drive_id;
     }
 
-    public String getNodeId() {
-        return nodeId;
+    public String getFile_id() {
+        return file_id;
     }
 
-    public void setNodeId(String nodeId) {
-        this.nodeId = nodeId;
+    public void setFile_id(String file_id) {
+        this.file_id = file_id;
     }
 
-    public String getOrgId() {
-        return orgId;
+    public String getUpload_id() {
+        return upload_id;
     }
 
-    public void setOrgId(String orgId) {
-        this.orgId = orgId;
-    }
-
-    public String getUploadId() {
-        return uploadId;
-    }
-
-    public void setUploadId(String uploadId) {
-        this.uploadId = uploadId;
-    }
-
-    public String getCcpFileId() {
-        return ccpFileId;
-    }
-
-    public void setCcpFileId(String ccpFileId) {
-        this.ccpFileId = ccpFileId;
+    public void setUpload_id(String upload_id) {
+        this.upload_id = upload_id;
     }
 }

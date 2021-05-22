@@ -63,7 +63,7 @@ public class AliYunDriverClient {
                 .put(RequestBody.create(MediaType.parse(""), bytes, offset, byteCount))
                 .url(url).build();
         try (Response response = okHttpClient.newCall(request).execute()){
-            LOGGER.info("post {}, code {}", url, response.code());
+            LOGGER.info("upload {}, code {}", url, response.code());
             if (!response.isSuccessful()) {
                 LOGGER.error("请求失败，url={}, code={}, body={}", url, response.code(), response.body().string());
                 throw new WebdavException("请求失败：" + url);

@@ -96,71 +96,72 @@ public class AliYunDriverClientService {
         int chunkCount = (int) Math.ceil(((double) size) / chunkSize); // 进1法
 
         UploadPreRequest uploadPreRequest = new UploadPreRequest();
-//        uploadPreRequest.setOrgId(client.getOrgId());
-//        uploadPreRequest.setParentId(parent.getNodeId());
-//        uploadPreRequest.setSpaceId(client.getSpaceId());
-        UploadPreInfo uploadPreInfo = new UploadPreInfo();
-//        uploadPreInfo.setCcpParentId(parent.getCcpFileId());
-        uploadPreInfo.setDriveId(client.getDriveId());
-        uploadPreInfo.setName(pathInfo.getName());
-        uploadPreInfo.setSize(size);
-        uploadPreInfo.setChunkCount(chunkCount);
-        uploadPreInfo.setType(FileType.file.name());
-        uploadPreRequest.setInfos(Collections.singletonList(uploadPreInfo));
+        uploadPreRequest.setContent_hash(UUID.randomUUID().toString());
+        uploadPreRequest.setDrive_id(client.getDriveId());
+        uploadPreRequest.setName(pathInfo.getName());
+        uploadPreRequest.setParent_file_id(parent.getFile_id());
+        uploadPreRequest.setSize((long) size);
+        List<UploadPreRequest.PartInfo> part_info_list = new ArrayList<>();
+        for (int i = 0; i < chunkCount; i++) {
+            UploadPreRequest.PartInfo partInfo = new UploadPreRequest.PartInfo();
+            partInfo.setPart_number(i + 1);
+            part_info_list.add(partInfo);
+        }
+        uploadPreRequest.setPart_info_list(part_info_list);
+
         LOGGER.info("开始上传文件，文件名：{}，总大小：{}, 文件块数量：{}", path, size, chunkCount);
 
-        String json = client.post("/pan/api/nodes/file", uploadPreRequest);
-        List<UploadPreResult> uploadPreResultList = JsonUtil.readValue(json, new TypeReference<List<UploadPreResult>>() {
-        });
-        UploadPreResult uploadPreResult = uploadPreResultList.get(0);
-        List<String> uploadUrl = uploadPreResult.getUploadUrl();
-        LOGGER.info("文件预处理成功，开始上传。文件名：{}，上传URL数量：{}", path, uploadUrl.size());
+        String json = client.post("/file/create_with_proof", uploadPreRequest);
+        UploadPreResult uploadPreResult = JsonUtil.readValue(json, UploadPreResult.class);
+        List<UploadPreRequest.PartInfo> partInfoList = uploadPreResult.getPart_info_list();
+        if (partInfoList != null) {
+            LOGGER.info("文件预处理成功，开始上传。文件名：{}，上传URL数量：{}", path, partInfoList.size());
 
-        byte[] buffer = new byte[chunkSize];
-        for (int i = 0; i < uploadUrl.size(); i++) {
-            String oneUploadUrl = uploadUrl.get(i);
-            try {
-                int read = IOUtils.read(inputStream, buffer, 0, buffer.length);
-                if (read == -1) {
-                    return;
+            byte[] buffer = new byte[chunkSize];
+            for (int i = 0; i < partInfoList.size(); i++) {
+                UploadPreRequest.PartInfo partInfo = partInfoList.get(i);
+                try {
+                    int read = IOUtils.read(inputStream, buffer, 0, buffer.length);
+                    if (read == -1) {
+                        return;
+                    }
+                    client.upload(partInfo.getUpload_url(), buffer, 0, read);
+                    LOGGER.info("文件正在上传。文件名：{}，当前进度：{}/{}", path, (i+1), partInfoList.size());
+
+                } catch (IOException e) {
+                    throw new WebdavException(e);
                 }
-                client.upload(oneUploadUrl, buffer, 0, read);
-                LOGGER.info("文件正在上传。文件名：{}，当前进度：{}/{}", path, (i+1), uploadUrl.size());
-
-            } catch (IOException e) {
-                throw new WebdavException(e);
             }
         }
+
 
 
         UploadFinalRequest uploadFinalRequest = new UploadFinalRequest();
-        uploadFinalRequest.setCcpFileId(uploadPreResult.getCcpFileId());
-        uploadFinalRequest.setDriveId(client.getDriveId());
-        uploadFinalRequest.setNodeId(uploadPreResult.getNodeId());
-//        uploadFinalRequest.setOrgId(client.getOrgId());
-        uploadFinalRequest.setUploadId(uploadPreResult.getUploadId());
-        client.post("/pan/api/nodes/complete", uploadFinalRequest);
+        uploadFinalRequest.setFile_id(uploadPreResult.getFile_id());
+        uploadFinalRequest.setDrive_id(client.getDriveId());
+        uploadFinalRequest.setUpload_id(uploadPreResult.getUpload_id());
+
+        client.post("/file/complete", uploadFinalRequest);
         LOGGER.info("文件上传成功。文件名：{}", path);
-        if (!uploadPreResult.getName().equals(pathInfo.getName())) {
-            LOGGER.info("上传文件名{}与原文件名{}不同，对文件进行重命名", uploadPreResult.getName(), pathInfo.getName());
-            TFile oldFile = getNodeIdByPath2(path);
-            // 如果旧文件存在，则先删除
-            if (oldFile != null) {
-                LOGGER.info("旧文件{}还存在，大小为{}，进行删除操作，可前往网页版的回收站查看", path, oldFile.getSize());
-                remove(path);
-                try {
-                    Thread.sleep(1500);
-                } catch (InterruptedException e) {
-                    // no
-                }
-            }
-            RenameRequest renameRequest = new RenameRequest();
-            renameRequest.setCcpFileId(uploadPreResult.getCcpFileId());
-            renameRequest.setDriveId(client.getDriveId());
-//            renameRequest.setOrgId(client.getOrgId());
-            renameRequest.setName(pathInfo.getName());
-            client.put("/pan/api/nodes/" + uploadPreResult.getNodeId(), renameRequest);
-        }
+//        if (!uploadPreResult.getName().equals(pathInfo.getName())) {
+//            LOGGER.info("上传文件名{}与原文件名{}不同，对文件进行重命名", uploadPreResult.getName(), pathInfo.getName());
+//            TFile oldFile = getNodeIdByPath2(path);
+//            // 如果旧文件存在，则先删除
+//            if (oldFile != null) {
+//                LOGGER.info("旧文件{}还存在，大小为{}，进行删除操作，可前往网页版的回收站查看", path, oldFile.getSize());
+//                remove(path);
+//                try {
+//                    Thread.sleep(1500);
+//                } catch (InterruptedException e) {
+//                    // no
+//                }
+//            }
+//            RenameRequest renameRequest = new RenameRequest();
+//            renameRequest.setDrive_id(client.getDriveId());
+//            renameRequest.setFile_id(oldFile.getFile_id());
+//            renameRequest.setName(pathInfo.getName());
+//            client.post("/file/update", renameRequest);
+//        }
         clearCache();
     }
 
@@ -168,11 +169,10 @@ public class AliYunDriverClientService {
         sourcePath = normalizingPath(sourcePath);
         TFile tFile = getTFileByPath(sourcePath);
         RenameRequest renameRequest = new RenameRequest();
-//        renameRequest.setCcpFileId(tFile.getCcpFileId());
-        renameRequest.setDriveId(client.getDriveId());
-//        renameRequest.setOrgId(client.getOrgId());
+        renameRequest.setDrive_id(client.getDriveId());
+        renameRequest.setFile_id(tFile.getFile_id());
         renameRequest.setName(newName);
-//        client.put("/pan/api/nodes/" + tFile.getNodeId(), renameRequest);
+        client.post("/file/update", renameRequest);
         clearCache();
     }
 
@@ -183,15 +183,10 @@ public class AliYunDriverClientService {
         TFile sourceTFile = getTFileByPath(sourcePath);
         TFile targetTFile = getTFileByPath(targetPath);
         MoveRequest moveRequest = new MoveRequest();
-//        moveRequest.setOrgId(client.getOrgId());
-        moveRequest.setDriveId(client.getDriveId());
-//        moveRequest.setParentId(targetTFile.getNodeId());
-        MoveRequestId moveRequestId = new MoveRequestId();
-//        moveRequestId.setCcpFileId(sourceTFile.getCcpFileId());
-//        moveRequestId.setId(sourceTFile.getNodeId());
-        moveRequest.setIds(Collections.singletonList(moveRequestId));
-        client.post("/pan/api/nodes/move", moveRequest);
-        clearCache();
+        moveRequest.setDrive_id(client.getDriveId());
+        moveRequest.setFile_id(sourceTFile.getFile_id());
+        moveRequest.setTo_parent_file_id(targetTFile.getFile_id());
+        client.post("/file/move", moveRequest);
         clearCache();
     }
 
@@ -202,9 +197,9 @@ public class AliYunDriverClientService {
             return;
         }
         RemoveRequest removeRequest = new RemoveRequest();
-//        removeRequest.setOrgId(client.getOrgId());
-//        removeRequest.setNodeIds(Collections.singletonList(tFile.getNodeId()));
-        client.post("/pan/api/nodes/archive", removeRequest);
+        removeRequest.setDrive_id(client.getDriveId());
+        removeRequest.setFile_id(tFile.getFile_id());
+        client.post("/recyclebin/trash", removeRequest);
         clearCache();
     }
 
@@ -219,21 +214,16 @@ public class AliYunDriverClientService {
         }
 
         CreateFileRequest createFileRequest = new CreateFileRequest();
-//        createFileRequest.setCcpParentId(parent.getCcpFileId());
-        createFileRequest.setDriveId(client.getDriveId());
+        createFileRequest.setDrive_id(client.getDriveId());
         createFileRequest.setName(pathInfo.getName());
-//        createFileRequest.setOrgId(client.getOrgId());
-//        createFileRequest.setParentId(parent.getNodeId());
-//        createFileRequest.setSpaceId(client.getSpaceId());
+        createFileRequest.setParent_file_id(parent.getFile_id());
         createFileRequest.setType(FileType.folder.name());
-        String json = client.post("/pan/api/nodes/folder", createFileRequest);
-        List<CreateFileResult> createFileResults = JsonUtil.readValue(json, new TypeReference<List<CreateFileResult>>() {
-        });
-        if (createFileResults.size() != 1) {
+        String json = client.post("/file/create_with_proof", createFileRequest);
+        TFile createFileResult = JsonUtil.readValue(json, TFile.class);
+        if (createFileResult.getFile_name() == null) {
             LOGGER.error("创建目录{}失败: {}",path, json);
         }
-        CreateFileResult createFileResult = createFileResults.get(0);
-        if (!createFileResult.getName().equals(pathInfo.getName())) {
+        if (!createFileResult.getFile_name().equals(pathInfo.getName())) {
             LOGGER.info("创建目录{}与原值{}不同，重命名", createFileResult.getName(), pathInfo.getName());
             rename(pathInfo.getParentPath() + "/" + createFileResult.getName(), pathInfo.getName());
             clearCache();
