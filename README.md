@@ -1,37 +1,38 @@
-# webdav-teambition
-本项目实现了阿里Teambition网盘的webdav协议，只需要简单的配置一下cookies，就可以让Teambition变身为webdav协议的文件服务器。
+说明：[1.1.0版本](https://github.com/zxbu/webdav-aliyundriver/releases/tag/v1.1.0)支持阿里Teambition网盘的webdav协议，后续的2.x版本仅支持阿里云盘，不再维护Teambition网盘版本
+# webdav-aliyundriver
+本项目实现了阿里云盘的webdav协议，只需要简单的配置一下，就可以让阿里云盘变身为webdav协议的文件服务器。
 基于此，你可以把Teambition挂载为Windows、Linux、Mac系统的磁盘，可以通过NAS系统做文件管理或文件同步，更多玩法等你挖掘
 # 如何使用
-支持两种登录方式：指定cookies或账号密码方式。具体看参数说明
+支持refreshToken登录方式，具体看参数说明
 ## Jar包运行
-[点击下载Jar包](https://github.com/zxbu/webdav-teambition/releases/latest)
+[点击下载Jar包](https://github.com/zxbu/webdav-aliyundriver/releases/latest)
 > 建议自己下载源码编译，以获得最新代码
 ```bash
-java -jar webdav-teambition.jar --teambition.userName="your userName" --teambition.password="your password"
+java -jar webdav.jar --aliyundrive.refresh-token="your refreshToken"
 ```
 ## 容器运行
 ```bash
-docker run -d --name=webdav-teambition -p 8080:8080 zx5253/webdav-teambition:latest  --teambition.userName="your userName" --teambition.password="your password"
+docker run -d --name=webdav-aliyundriver --restart=always -p 8080:8080  -v /etc/localtime:/etc/localtime -v /etc/aliyun-driver/:/etc/aliyun-driver/ -e TZ="Asia/Shanghai" -e ALIYUNDRIVE_REFRESH_TOKEN="your refreshToken" zx5253/webdav-aliyundriver
+
+# /etc/aliyun-driver/ 挂载卷自动维护了最新的refreshToken，建议挂载
 ```
+
 
 # 参数说明
 ```bash
---teambition.cookies 
-    如果采用指定cookies登录，此项必填，teambition官网cookies
---teambition.userName 
-    如果采用账号密码登录，此项必填，你的手机号
---teambition.password 
-    如果采用账号密码登录，此项必填，你的明文密码
+--aliyundrive.refresh-token
+    阿里云盘的refreshToken，获取方式见下文
 --server.port
     非必填，服务器端口号，默认为8080
 ```
 # QQ群
 > 群号：789738128
 
-# Chrome获取Cookies方式
-1. 用Chrome打开官网，保证是登录状态 https://www.teambition.com/
-2. 参考这篇百度经验 https://jingyan.baidu.com/article/0aa2237505193488cd0d647f.html
-3. 要确保完整复制看到的cookies，并在启动参数时左右加上双引号
+# 浏览器获取refreshToken方式
+1. 先通过浏览器（建议chrome）打开阿里云盘官网并登录：https://www.aliyundrive.com/drive/
+2. 登录成功后，按F12打开开发者工具，点击Application，点击Local Storage，点击 Local Storage下的 [https://www.aliyundrive.com/](https://www.aliyundrive.com/)，点击右边的token，此时可以看到里面的数据，其中就有refresh_token，把其值复制出来即可。（格式为小写字母和数字，不要复制双引号。例子：ca6bf2175d73as2188efg81f87e55f11）
+3. 第二步有点繁琐，大家结合下面的截图就看懂了
+ ![image](https://user-images.githubusercontent.com/32785355/119246278-e6760880-bbb2-11eb-877c-aca16cf75d89.png)
 
 # 功能说明
 ## 支持的功能
@@ -47,7 +48,10 @@ docker run -d --name=webdav-teambition -p 8080:8080 zx5253/webdav-teambition:lat
 3. 文件上传断点续传
 4. 文件下载断点续传
 5. 同级目录下文件数量不能超过10000个（建议不超过100，否则性能比较差）
-
-# 小白教程
-## 如何在群辉上挂载阿里Teambition或做同步盘
-https://www.yuque.com/docs/share/e4271a8a-e300-48d6-b14c-b1ab9d11a1d9
+## 已知问题
+1. 没有做文件sha1校验，不保证上传文件的100%准确性（一般场景下，是没问题的）
+2. 通过文件名和文件大小判断是否重复。也就是说如果一个文件即使发生了更新，但其大小没有任何改变，是不会自动上传的
+3. 超大文件上传存在问题，具体上限还不清楚，我自己实测5G+大小的文件无法顺利上传
+## TODO
+1. 支持更多登录方式（验证码、账号密码等）
+2. 支持权限校验
