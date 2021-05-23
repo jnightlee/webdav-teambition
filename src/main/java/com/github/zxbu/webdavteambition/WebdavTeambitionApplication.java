@@ -1,12 +1,12 @@
 package com.github.zxbu.webdavteambition;
 
+import com.github.zxbu.webdavteambition.filter.ErrorFilter;
 import com.github.zxbu.webdavteambition.store.AliYunDriverFileSystemStore;
 import net.sf.webdav.WebdavServlet;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
-import org.springframework.boot.web.servlet.support.ErrorPageFilter;
 import org.springframework.context.annotation.Bean;
 
 import java.util.LinkedHashMap;
@@ -31,16 +31,12 @@ public class WebdavTeambitionApplication {
         return servletRegistrationBean;
     }
 
-    @Bean
-    public ErrorPageFilter errorPageFilter() {
-        return new ErrorPageFilter();
-    }
 
     @Bean
-    public FilterRegistrationBean disableSpringBootErrorFilter(ErrorPageFilter filter) {
+    public FilterRegistrationBean disableSpringBootErrorFilter() {
         FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean();
-        filterRegistrationBean.setFilter(filter);
-        filterRegistrationBean.setEnabled(false);
+        filterRegistrationBean.setFilter(new ErrorFilter());
+        filterRegistrationBean.setEnabled(true);
         return filterRegistrationBean;
     }
 

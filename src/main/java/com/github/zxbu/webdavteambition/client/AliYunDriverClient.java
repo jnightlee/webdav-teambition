@@ -7,7 +7,6 @@ import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,8 +16,8 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class AliYunDriverClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(AliYunDriverClient.class);
@@ -57,7 +56,11 @@ public class AliYunDriverClient {
                 }
                 return null;
             }
-        }).build();
+        })
+                .readTimeout(1, TimeUnit.MINUTES)
+                .writeTimeout(1, TimeUnit.MINUTES)
+                .connectTimeout(1, TimeUnit.MINUTES)
+                .build();
         this.okHttpClient = okHttpClient;
         this.aliYunDriveProperties = aliYunDriveProperties;
         init();
