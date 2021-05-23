@@ -6,14 +6,15 @@ import com.github.zxbu.webdavteambition.model.result.TFile;
 import net.sf.webdav.ITransaction;
 import net.sf.webdav.IWebdavStore;
 import net.sf.webdav.StoredObject;
+import net.sf.webdav.Transaction;
 import net.sf.webdav.exceptions.WebdavException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
 import java.util.Set;
@@ -40,16 +41,19 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
     }
 
     @Override
-    public ITransaction begin(Principal principal) {
+    public ITransaction begin(Principal principal, HttpServletRequest req, HttpServletResponse resp) {
         LOGGER.debug("begin");
+
         aliYunDriverClientService.clearCache();
-        return null;
+        return new Transaction(principal, req, resp);
     }
 
     @Override
     public void checkAuthentication(ITransaction transaction) {
         LOGGER.debug("checkAuthentication");
-
+//        if (transaction.getPrincipal() == null) {
+//            throw new UnauthenticatedException(WebdavStatus.SC_UNAUTHORIZED);
+//        }
     }
 
     @Override
@@ -86,21 +90,28 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
     @Override
     public long setResourceContent(ITransaction transaction, String resourceUri, InputStream content, String contentType, String characterEncoding) {
         LOGGER.info("setResourceContent {}", resourceUri);
-        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest request = requestAttributes.getRequest();
-        int contentLength = request.getContentLength();
+        HttpServletRequest request = transaction.getRequest();
+        HttpServletResponse response = transaction.getResponse();
+
+        long contentLength = request.getContentLength();
         if (contentLength < 0) {
-            contentLength = 0;
+            contentLength = Long.parseLong(request.getHeader("content-length"));
         }
+        aliYunDriverClientService.uploadPre(resourceUri, contentLength, content);
+
         if (contentLength == 0) {
             String expect = request.getHeader("Expect");
 
             // 支持大文件上传
             if ("100-continue".equalsIgnoreCase(expect)) {
+                try {
+                    response.sendError(100, "Continue");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 return 0;
             }
         }
-        aliYunDriverClientService.uploadPre(resourceUri, contentLength, content);
         return contentLength;
     }
 
@@ -155,6 +166,8 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
 
     @Override
     public StoredObject getStoredObject(ITransaction transaction, String uri) {
+
+
         LOGGER.debug("getStoredObject: {}", uri);
         TFile tFile = aliYunDriverClientService.getTFileByPath(uri);
         if (tFile != null) {

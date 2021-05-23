@@ -4,9 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.zxbu.webdavteambition.client.AliYunDriverClient;
 import com.github.zxbu.webdavteambition.model.*;
-import com.github.zxbu.webdavteambition.model.result.CreateFileResult;
-import com.github.zxbu.webdavteambition.model.result.TFileListResult;
 import com.github.zxbu.webdavteambition.model.result.TFile;
+import com.github.zxbu.webdavteambition.model.result.TFileListResult;
 import com.github.zxbu.webdavteambition.model.result.UploadPreResult;
 import com.github.zxbu.webdavteambition.util.JsonUtil;
 import net.sf.webdav.exceptions.WebdavException;
@@ -86,10 +85,10 @@ public class AliYunDriverClientService {
         }
     }
 
-    public void uploadPre(String path, int size, InputStream inputStream) {
+    public void uploadPre(String path, long size, InputStream inputStream) {
         path = normalizingPath(path);
         PathInfo pathInfo = getPathInfo(path);
-        TFile parent =  getTFileByPath(pathInfo.getParentPath());
+        TFile parent = getTFileByPath(pathInfo.getParentPath());
         if (parent == null) {
             return;
         }
@@ -111,7 +110,7 @@ public class AliYunDriverClientService {
         uploadPreRequest.setDrive_id(client.getDriveId());
         uploadPreRequest.setName(pathInfo.getName());
         uploadPreRequest.setParent_file_id(parent.getFile_id());
-        uploadPreRequest.setSize((long) size);
+        uploadPreRequest.setSize(size);
         List<UploadPreRequest.PartInfo> part_info_list = new ArrayList<>();
         for (int i = 0; i < chunkCount; i++) {
             UploadPreRequest.PartInfo partInfo = new UploadPreRequest.PartInfo();

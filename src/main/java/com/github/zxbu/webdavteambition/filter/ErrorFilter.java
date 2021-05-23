@@ -22,7 +22,9 @@ public class ErrorFilter extends OncePerRequestFilter {
             filterChain.doFilter(httpServletRequest, wrapperResponse);
             if (wrapperResponse.hasErrorToSend()) {
                 httpServletResponse.setStatus(wrapperResponse.getStatus());
-                httpServletResponse.getWriter().write(wrapperResponse.getMessage());
+                if (wrapperResponse.getMessage() != null) {
+                    httpServletResponse.getWriter().write(wrapperResponse.getMessage());
+                }
             }
             httpServletResponse.flushBuffer();
         } catch (Throwable t) {
