@@ -9,9 +9,9 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.github.zxbu</groupId>
-    <artifactId>webdav-teambition</artifactId>
-    <version>1.1.0</version>
-    <name>webdav-teambition</name>
+    <artifactId>webdav-aliyundriver</artifactId>
+    <version>2.0.0</version>
+    <name>webdav</name>
     <description>Demo project for Spring Boot</description>
 
     <properties>
