@@ -176,7 +176,8 @@ public class AliYunDriverClient {
     }
 
     private String readRefreshToken() {
-        Path path = Paths.get(aliYunDriveProperties.getRefreshTokenPath());
+        String refreshTokenPath = aliYunDriveProperties.getWorkDir() + "refresh-token";
+        Path path = Paths.get(refreshTokenPath);
 
         if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
             try {
@@ -192,17 +193,18 @@ public class AliYunDriverClient {
                 return new String(bytes, StandardCharsets.UTF_8);
             }
         } catch (IOException e) {
-            LOGGER.warn("读取refreshToken文件 {} 失败: ", aliYunDriveProperties.getRefreshTokenPath(), e);
+            LOGGER.warn("读取refreshToken文件 {} 失败: ", refreshTokenPath, e);
         }
         writeRefreshToken(aliYunDriveProperties.getRefreshToken());
         return aliYunDriveProperties.getRefreshToken();
     }
 
     private void writeRefreshToken(String newRefreshToken) {
+        String refreshTokenPath = aliYunDriveProperties.getWorkDir() + "refresh-token";
         try {
-            Files.write(Paths.get(aliYunDriveProperties.getRefreshTokenPath()), newRefreshToken.getBytes(StandardCharsets.UTF_8));
+            Files.write(Paths.get(refreshTokenPath), newRefreshToken.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
-            LOGGER.warn("写入refreshToken文件 {} 失败: ", aliYunDriveProperties.getRefreshTokenPath(), e);
+            LOGGER.warn("写入refreshToken文件 {} 失败: ", refreshTokenPath, e);
         }
         aliYunDriveProperties.setRefreshToken(newRefreshToken);
     }
