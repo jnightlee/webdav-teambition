@@ -6,10 +6,16 @@ import net.sf.webdav.exceptions.WebdavException;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -19,16 +25,45 @@ public class AliYunDriverClient {
     private OkHttpClient okHttpClient;
     private AliYunDriveProperties aliYunDriveProperties;
 
-    public AliYunDriverClient(OkHttpClient okHttpClient, AliYunDriveProperties aliYunDriveProperties) {
+    public AliYunDriverClient(AliYunDriveProperties aliYunDriveProperties) {
+
+        OkHttpClient okHttpClient = new OkHttpClient.Builder().addInterceptor(new Interceptor() {
+            @Override
+            public Response intercept(Chain chain) throws IOException {
+                Request request = chain.request();
+                request = request.newBuilder()
+                        .removeHeader("User-Agent")
+                        .addHeader("User-Agent", aliYunDriveProperties.getAgent())
+                        .removeHeader("authorization")
+                        .addHeader("authorization", aliYunDriveProperties.getAuthorization())
+                        .build();
+                return chain.proceed(request);
+            }
+        }).authenticator(new Authenticator() {
+            @Override
+            public Request authenticate(Route route, Response response) throws IOException {
+                if (response.code() == 401 && response.body() != null  && response.body().string().contains("AccessToken")) {
+                    String refreshTokenResult = post("https://websv.aliyundrive.com/token/refresh", Collections.singletonMap("refresh_token", readRefreshToken()));
+                    String accessToken = (String) JsonUtil.getJsonNodeValue(refreshTokenResult, "access_token");
+                    String refreshToken = (String) JsonUtil.getJsonNodeValue(refreshTokenResult, "refresh_token");
+                    Assert.hasLength(accessToken, "获取accessToken失败");
+                    Assert.hasLength(refreshToken, "获取refreshToken失败");
+                    aliYunDriveProperties.setAuthorization(accessToken);
+                    writeRefreshToken(refreshToken);
+                    return response.request().newBuilder()
+                            .removeHeader("authorization")
+                            .header("authorization", accessToken)
+                            .build();
+                }
+                return null;
+            }
+        }).build();
         this.okHttpClient = okHttpClient;
         this.aliYunDriveProperties = aliYunDriveProperties;
+        init();
     }
 
     private void login() {
-        if (StringUtils.hasLength(aliYunDriveProperties.getAuthorization())) {
-            return;
-        }
-
         // todo 暂不支持登录功能
     }
 
@@ -138,5 +173,37 @@ public class AliYunDriverClient {
             return url;
         }
         return aliYunDriveProperties.getUrl() + url;
+    }
+
+    private String readRefreshToken() {
+        Path path = Paths.get(aliYunDriveProperties.getRefreshTokenPath());
+
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+            try {
+                Files.createDirectories(path.getParent());
+                Files.createFile(path);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        try {
+            byte[] bytes = Files.readAllBytes(path);
+            if (bytes.length != 0) {
+                return new String(bytes, StandardCharsets.UTF_8);
+            }
+        } catch (IOException e) {
+            LOGGER.warn("读取refreshToken文件 {} 失败: ", aliYunDriveProperties.getRefreshTokenPath(), e);
+        }
+        writeRefreshToken(aliYunDriveProperties.getRefreshToken());
+        return aliYunDriveProperties.getRefreshToken();
+    }
+
+    private void writeRefreshToken(String newRefreshToken) {
+        try {
+            Files.write(Paths.get(aliYunDriveProperties.getRefreshTokenPath()), newRefreshToken.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            LOGGER.warn("写入refreshToken文件 {} 失败: ", aliYunDriveProperties.getRefreshTokenPath(), e);
+        }
+        aliYunDriveProperties.setRefreshToken(newRefreshToken);
     }
 }

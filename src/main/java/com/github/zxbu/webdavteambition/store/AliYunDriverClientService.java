@@ -96,6 +96,10 @@ public class AliYunDriverClientService {
         // 如果已存在，先删除
         TFile tfile = getTFileByPath(path);
         if (tfile != null) {
+            if (tfile.getSize() == size) {
+                //如果文件大小一样，则不再上传
+                return;
+            }
             remove(path);
         }
 

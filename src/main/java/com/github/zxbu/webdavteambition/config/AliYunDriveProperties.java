@@ -5,7 +5,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "aliyundrive", ignoreUnknownFields = true)
 public class AliYunDriveProperties {
     private String url = "https://api.aliyundrive.com/v2";
-    private String authorization;
+    private String authorization = "";
+    private String refreshToken;
+    private String refreshTokenPath = "/etc/AliYunDriver-RefreshToken";
     private String agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_0_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36";
     private String driveId;
 
@@ -35,6 +37,22 @@ public class AliYunDriveProperties {
 
     public String getDriveId() {
         return driveId;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public String getRefreshTokenPath() {
+        return refreshTokenPath;
+    }
+
+    public void setRefreshTokenPath(String refreshTokenPath) {
+        this.refreshTokenPath = refreshTokenPath;
     }
 
     public void setDriveId(String driveId) {
