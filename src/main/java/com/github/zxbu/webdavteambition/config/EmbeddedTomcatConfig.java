@@ -1,12 +1,13 @@
 package com.github.zxbu.webdavteambition.config;
 
 import org.apache.catalina.authenticator.DigestAuthenticator;
-import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.realm.GenericPrincipal;
 import org.apache.catalina.realm.MessageDigestCredentialHandler;
 import org.apache.catalina.realm.RealmBase;
 import org.apache.tomcat.util.descriptor.web.SecurityCollection;
 import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
@@ -17,7 +18,11 @@ import java.security.Principal;
 import java.util.Collections;
 
 @Component
+@ConditionalOnProperty(prefix = "aliyundrive.auth", name = "enable", matchIfMissing = true)
 public class EmbeddedTomcatConfig implements WebServerFactoryCustomizer<ConfigurableServletWebServerFactory>, Ordered {
+
+    @Autowired
+    private AliYunDriveProperties aliYunDriveProperties;
 
     @Override
     public void customize(ConfigurableServletWebServerFactory factory) {
@@ -29,39 +34,31 @@ public class EmbeddedTomcatConfig implements WebServerFactoryCustomizer<Configur
             RealmBase realm = new RealmBase() {
                 @Override
                 protected String getPassword(String username) {
-                    return "12345";
+                    if (aliYunDriveProperties.getAuth().getUserName().equals(username)) {
+                        return aliYunDriveProperties.getAuth().getPassword();
+                    }
+                    return "";
                 }
 
                 @Override
                 protected Principal getPrincipal(String username) {
-                    return new GenericPrincipal(username, "12345", Collections.singletonList("*"));
+                    return new GenericPrincipal(username, aliYunDriveProperties.getAuth().getPassword(), Collections.singletonList("**"));
                 }
             };
 
             MessageDigestCredentialHandler credentialHandler = new MessageDigestCredentialHandler();
-//            try {
-//                credentialHandler.setAlgorithm("md5");
-//            } catch (NoSuchAlgorithmException e) {
-//                e.printStackTrace();
-//            }
             realm.setCredentialHandler(credentialHandler);
-
             context.setRealm(realm);
-            DigestAuthenticator valve = new DigestAuthenticator();
+
+            DigestAuthenticator digestAuthenticator = new DigestAuthenticator();
             SecurityConstraint securityConstraint = new SecurityConstraint();
             securityConstraint.setAuthConstraint(true);
-            securityConstraint.addAuthRole("*");
-//            securityConstraint.setUserConstraint("CONFIDENTIAL");
+            securityConstraint.addAuthRole("**");
             SecurityCollection collection = new SecurityCollection();
             collection.addPattern("/*");
             securityConstraint.addCollection(collection);
-
             context.addConstraint(securityConstraint);
-
-            StandardContext standardContext = (StandardContext) context;
-
-
-            context.getPipeline().addValve(valve);
+            context.getPipeline().addValve(digestAuthenticator);
         });
 
     }

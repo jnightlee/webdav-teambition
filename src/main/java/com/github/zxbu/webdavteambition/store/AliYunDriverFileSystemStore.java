@@ -42,18 +42,6 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
     @Override
     public ITransaction begin(Principal principal, HttpServletRequest req, HttpServletResponse resp) {
         LOGGER.debug("begin");
-        Enumeration<String> headerNames = req.getHeaderNames();
-        System.out.println(req.getMethod() + "  " + req.getRequestURI());
-        System.out.println("principal:" + principal);
-        while (headerNames.hasMoreElements()) {
-            String s = headerNames.nextElement();
-            System.out.println(s + ":" + req.getHeader(s));
-        }
-
-
-        System.out.println("-----------------------");
-        System.out.println();
-
         aliYunDriverClientService.clearCache();
         return new Transaction(principal, req, resp);
     }
@@ -61,7 +49,6 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
     @Override
     public void checkAuthentication(ITransaction transaction) {
         LOGGER.debug("checkAuthentication");
-        HttpServletRequest req = transaction.getRequest();
         if (transaction.getPrincipal() == null) {
             throw new UnauthenticatedException(WebdavStatus.SC_UNAUTHORIZED);
         }
