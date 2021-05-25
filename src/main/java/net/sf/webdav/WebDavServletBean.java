@@ -109,6 +109,10 @@ public class WebDavServletBean extends HttpServlet {
         if (LOG.isTraceEnabled())
             debugRequest(methodName, req);
 
+        if (returnError(req, resp)) {
+            return;
+        }
+
         try {
             Principal userPrincipal = getUserPrincipal(req);
             transaction = _store.begin(userPrincipal, req, resp);
@@ -171,15 +175,32 @@ public class WebDavServletBean extends HttpServlet {
     }
 
     /**
-     * Method that permit to customize the way 
+     * Method that permit to customize the way
      * user information are extracted from the request, default use JAAS
+     *
      * @param req
      * @return
      */
     protected Principal getUserPrincipal(HttpServletRequest req) {
-    	return req.getUserPrincipal();
+        return req.getUserPrincipal();
     }
-    
+
+    private boolean returnError(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        if (req.getRequestURI().equals("/error")) {
+            Object codeObject = req.getAttribute("javax.servlet.error.status_code");
+            if (codeObject != null) {
+                int code = Integer.parseInt(codeObject.toString());
+                if (code > 400) {
+                    resp.setStatus(code);
+                    resp.flushBuffer();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
     private void debugRequest(String methodName, HttpServletRequest req) {
         LOG.trace("-----------");
         LOG.trace("WebdavServlet\n request: methodName = " + methodName);

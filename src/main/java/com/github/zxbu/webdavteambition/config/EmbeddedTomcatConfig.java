@@ -1,0 +1,73 @@
+package com.github.zxbu.webdavteambition.config;
+
+import org.apache.catalina.authenticator.DigestAuthenticator;
+import org.apache.catalina.core.StandardContext;
+import org.apache.catalina.realm.GenericPrincipal;
+import org.apache.catalina.realm.MessageDigestCredentialHandler;
+import org.apache.catalina.realm.RealmBase;
+import org.apache.tomcat.util.descriptor.web.SecurityCollection;
+import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
+import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
+import org.springframework.core.Ordered;
+import org.springframework.stereotype.Component;
+
+import java.security.Principal;
+import java.util.Collections;
+
+@Component
+public class EmbeddedTomcatConfig implements WebServerFactoryCustomizer<ConfigurableServletWebServerFactory>, Ordered {
+
+    @Override
+    public void customize(ConfigurableServletWebServerFactory factory) {
+
+        TomcatServletWebServerFactory tomcatServletWebServerFactory = (TomcatServletWebServerFactory) factory;
+
+        tomcatServletWebServerFactory.addContextCustomizers(context -> {
+
+            RealmBase realm = new RealmBase() {
+                @Override
+                protected String getPassword(String username) {
+                    return "12345";
+                }
+
+                @Override
+                protected Principal getPrincipal(String username) {
+                    return new GenericPrincipal(username, "12345", Collections.singletonList("*"));
+                }
+            };
+
+            MessageDigestCredentialHandler credentialHandler = new MessageDigestCredentialHandler();
+//            try {
+//                credentialHandler.setAlgorithm("md5");
+//            } catch (NoSuchAlgorithmException e) {
+//                e.printStackTrace();
+//            }
+            realm.setCredentialHandler(credentialHandler);
+
+            context.setRealm(realm);
+            DigestAuthenticator valve = new DigestAuthenticator();
+            SecurityConstraint securityConstraint = new SecurityConstraint();
+            securityConstraint.setAuthConstraint(true);
+            securityConstraint.addAuthRole("*");
+//            securityConstraint.setUserConstraint("CONFIDENTIAL");
+            SecurityCollection collection = new SecurityCollection();
+            collection.addPattern("/*");
+            securityConstraint.addCollection(collection);
+
+            context.addConstraint(securityConstraint);
+
+            StandardContext standardContext = (StandardContext) context;
+
+
+            context.getPipeline().addValve(valve);
+        });
+
+    }
+
+    @Override
+    public int getOrder() {
+        return Ordered.LOWEST_PRECEDENCE;
+    }
+}
