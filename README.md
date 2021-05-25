@@ -12,9 +12,10 @@ java -jar webdav.jar --aliyundrive.refresh-token="your refreshToken"
 ```
 ## 容器运行
 ```bash
-docker run -d --name=webdav-aliyundriver --restart=always -p 8080:8080  -v /etc/localtime:/etc/localtime -v /etc/aliyun-driver/:/etc/aliyun-driver/ -e TZ="Asia/Shanghai" -e ALIYUNDRIVE_REFRESH_TOKEN="your refreshToken" zx5253/webdav-aliyundriver
+docker run -d --name=webdav-aliyundriver --restart=always -p 8080:8080  -v /etc/localtime:/etc/localtime -v /etc/aliyun-driver/:/etc/aliyun-driver/ -e TZ="Asia/Shanghai" -e ALIYUNDRIVE_REFRESH_TOKEN="your refreshToken" -e ALIYUNDRIVE_AUTH_PASSWORD="admin" zx5253/webdav-aliyundriver
 
 # /etc/aliyun-driver/ 挂载卷自动维护了最新的refreshToken，建议挂载
+# ALIYUNDRIVE_AUTH_PASSWORD 是admin账户的密码，建议修改
 ```
 
 
@@ -24,6 +25,13 @@ docker run -d --name=webdav-aliyundriver --restart=always -p 8080:8080  -v /etc/
     阿里云盘的refreshToken，获取方式见下文
 --server.port
     非必填，服务器端口号，默认为8080
+--aliyundrive.auth.enable=true
+    是否开启WebDav账户验证，默认开启
+--aliyundrive.auth.user-name=admin
+    WebDav账户，默认admin
+--aliyundrive.auth.password=admin
+    WebDav密码，默认admin
+
 ```
 # QQ群
 > 群号：789738128
@@ -42,8 +50,8 @@ docker run -d --name=webdav-aliyundriver --restart=always -p 8080:8080  -v /etc/
 4. 文件下载
 5. 文件删除
 6. 文件上传（支持大文件自动分批上传）
+7. 支持WebDav权限校验（默认账户密码：admin/admin）
 ## 暂不支持的功能
-1. 权限校验
 2. 移动文件到其他目录的同时，修改文件名。比如 /a.zip 移动到 /b/a1.zip，是不支持的
 3. 文件上传断点续传
 4. 文件下载断点续传
@@ -54,4 +62,3 @@ docker run -d --name=webdav-aliyundriver --restart=always -p 8080:8080  -v /etc/
 3. 超大文件上传存在问题，具体上限还不清楚，我自己实测5G+大小的文件无法顺利上传
 ## TODO
 1. 支持更多登录方式（验证码、账号密码等）
-2. 支持权限校验
