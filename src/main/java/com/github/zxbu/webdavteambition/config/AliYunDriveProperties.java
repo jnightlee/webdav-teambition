@@ -10,6 +10,7 @@ public class AliYunDriveProperties {
     private String workDir = "/etc/aliyun-driver/";
     private String agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_0_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36";
     private String driveId;
+    private Auth auth;
 
     public String getUrl() {
         return url;
@@ -57,5 +58,43 @@ public class AliYunDriveProperties {
 
     public void setDriveId(String driveId) {
         this.driveId = driveId;
+    }
+
+    public Auth getAuth() {
+        return auth;
+    }
+
+    public void setAuth(Auth auth) {
+        this.auth = auth;
+    }
+
+    public static class Auth {
+        private Boolean enable = true;
+        private String userName;
+        private String password;
+
+        public Boolean getEnable() {
+            return enable;
+        }
+
+        public void setEnable(Boolean enable) {
+            this.enable = enable;
+        }
+
+        public String getUserName() {
+            return userName;
+        }
+
+        public void setUserName(String userName) {
+            this.userName = userName;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
     }
 }
