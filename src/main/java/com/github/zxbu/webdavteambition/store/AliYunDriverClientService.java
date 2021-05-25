@@ -249,8 +249,13 @@ public class AliYunDriverClientService {
     }
 
     public InputStream download(String path) {
-//        String downloadUrl = getTFileByPath(path).getDownloadUrl();
-        return client.download("downloadUrl");
+        TFile file = getTFileByPath(path);
+        DownloadRequest downloadRequest = new DownloadRequest();
+        downloadRequest.setDrive_id(client.getDriveId());
+        downloadRequest.setFile_id(file.getFile_id());
+        String json = client.post("/file/get_download_url", downloadRequest);
+        Object url = JsonUtil.getJsonNodeValue(json, "url");
+        return client.download(url.toString());
     }
 
     private TFile getNodeIdByPath2(String path) {

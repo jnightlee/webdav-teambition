@@ -86,7 +86,7 @@ public class AliYunDriverClient {
 
 
     public InputStream download(String url) {
-        Request request = new Request.Builder().url(url).build();
+        Request request = new Request.Builder().header("referer", "https://www.aliyundrive.com/").url(url).build();
         Response response = null;
         try {
             response = okHttpClient.newCall(request).execute();
