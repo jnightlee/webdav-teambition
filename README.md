@@ -2,6 +2,8 @@
 # webdav-aliyundriver
 本项目实现了阿里云盘的webdav协议，只需要简单的配置一下，就可以让阿里云盘变身为webdav协议的文件服务器。
 基于此，你可以把阿里云盘挂载为Windows、Linux、Mac系统的磁盘，可以通过NAS系统做文件管理或文件同步，更多玩法等你挖掘
+
+
 # 如何使用
 支持refreshToken登录方式，具体看参数说明
 ## Jar包运行
@@ -35,6 +37,20 @@ docker run -d --name=webdav-aliyundriver --restart=always -p 8080:8080  -v /etc/
 ```
 # QQ群
 > 群号：789738128
+
+# 新手教程
+## 群晖
+TODO
+
+## Windows10
+TODO
+
+## Linux
+TODO
+
+## Mac
+TODO
+
 
 # 浏览器获取refreshToken方式
 1. 先通过浏览器（建议chrome）打开阿里云盘官网并登录：https://www.aliyundrive.com/drive/
