@@ -3,8 +3,10 @@ package com.github.zxbu.webdavteambition.store;
 import com.github.zxbu.webdavteambition.model.FileType;
 import com.github.zxbu.webdavteambition.model.PathInfo;
 import com.github.zxbu.webdavteambition.model.result.TFile;
-import net.sf.webdav.*;
-import net.sf.webdav.exceptions.UnauthenticatedException;
+import net.sf.webdav.ITransaction;
+import net.sf.webdav.IWebdavStore;
+import net.sf.webdav.StoredObject;
+import net.sf.webdav.Transaction;
 import net.sf.webdav.exceptions.WebdavException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +17,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
-import java.util.Enumeration;
 import java.util.Set;
 
 public class AliYunDriverFileSystemStore implements IWebdavStore {
@@ -49,9 +50,6 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
     @Override
     public void checkAuthentication(ITransaction transaction) {
         LOGGER.debug("checkAuthentication");
-        if (transaction.getPrincipal() == null) {
-            throw new UnauthenticatedException(WebdavStatus.SC_UNAUTHORIZED);
-        }
     }
 
     @Override
