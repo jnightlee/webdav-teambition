@@ -37,7 +37,7 @@ public class EmbeddedTomcatConfig implements WebServerFactoryCustomizer<Configur
                     if (aliYunDriveProperties.getAuth().getUserName().equals(username)) {
                         return aliYunDriveProperties.getAuth().getPassword();
                     }
-                    return "";
+                    return null;
                 }
 
                 @Override
