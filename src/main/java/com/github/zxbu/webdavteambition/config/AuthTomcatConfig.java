@@ -19,7 +19,7 @@ import java.util.Collections;
 
 @Component
 @ConditionalOnProperty(prefix = "aliyundrive.auth", name = "enable", matchIfMissing = true)
-public class EmbeddedTomcatConfig implements WebServerFactoryCustomizer<ConfigurableServletWebServerFactory>, Ordered {
+public class AuthTomcatConfig implements WebServerFactoryCustomizer<ConfigurableServletWebServerFactory>, Ordered {
 
     @Autowired
     private AliYunDriveProperties aliYunDriveProperties;
