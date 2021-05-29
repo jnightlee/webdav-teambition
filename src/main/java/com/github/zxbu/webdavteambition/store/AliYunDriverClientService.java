@@ -12,6 +12,7 @@ import net.sf.webdav.exceptions.WebdavException;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -27,9 +28,12 @@ public class AliYunDriverClientService {
     private static String rootPath = "/";
     private static int chunkSize = 10485760; // 10MB
     private TFile rootTFile = null;
-    private ThreadLocal<Map<String, Set<TFile>>> tFilesCache = new ThreadLocal<>();
+    private final ThreadLocal<Map<String, Set<TFile>>> tFilesCache = new ThreadLocal<>();
 
     private final AliYunDriverClient client;
+
+    @Autowired
+    private VirtualTFileService virtualTFileService;
 
     public AliYunDriverClientService(AliYunDriverClient aliYunDriverClient) {
         this.client = aliYunDriverClient;
@@ -42,29 +46,38 @@ public class AliYunDriverClientService {
             map = new ConcurrentHashMap<>();
             tFilesCache.set(map);
         }
-        return map.computeIfAbsent(nodeId, key -> {
-            FileListRequest listQuery = new FileListRequest();
-            listQuery.setOffset(0);
-            listQuery.setLimit(10000);
-            listQuery.setOrder_by("updated_at");
-            listQuery.setOrder_direction("DESC");
-            listQuery.setDrive_id(client.getDriveId());
-            listQuery.setParent_file_id(nodeId);
-            String json = client.post("/file/list", listQuery);
-            TFileListResult<TFile> tFileListResult = JsonUtil.readValue(json, new TypeReference<TFileListResult<TFile>>() {
-            });
-            List<TFile> tFileList = tFileListResult.getItems();
-            tFileList.sort(Comparator.comparing(TFile::getUpdated_at).reversed());
-            Set<TFile> tFileSets = new LinkedHashSet<>();
-            for (TFile tFile : tFileList) {
-                if (!tFileSets.add(tFile)) {
-                    LOGGER.info("当前目录下{} 存在同名文件：{}，文件大小：{}", nodeId, tFile.getName(), tFile.getSize());
-                }
-            }
-            // 对文件名进行去重，只保留最新的一个
-            return tFileSets;
+        Set<TFile> tFiles = map.computeIfAbsent(nodeId, key -> {
+            // 获取真实的文件列表
+            return getTFiles2(nodeId);
         });
+        Set<TFile> all = new LinkedHashSet<>(tFiles);
+        // 获取上传中的文件列表
+        Collection<TFile> virtualTFiles = virtualTFileService.list(nodeId);
+        all.addAll(virtualTFiles);
+        return all;
+    }
 
+    private Set<TFile> getTFiles2(String nodeId) {
+        FileListRequest listQuery = new FileListRequest();
+        listQuery.setOffset(0);
+        listQuery.setLimit(10000);
+        listQuery.setOrder_by("updated_at");
+        listQuery.setOrder_direction("DESC");
+        listQuery.setDrive_id(client.getDriveId());
+        listQuery.setParent_file_id(nodeId);
+        String json = client.post("/file/list", listQuery);
+        TFileListResult<TFile> tFileListResult = JsonUtil.readValue(json, new TypeReference<TFileListResult<TFile>>() {
+        });
+        List<TFile> tFileList = tFileListResult.getItems();
+        tFileList.sort(Comparator.comparing(TFile::getUpdated_at).reversed());
+        Set<TFile> tFileSets = new LinkedHashSet<>();
+        for (TFile tFile : tFileList) {
+            if (!tFileSets.add(tFile)) {
+                LOGGER.info("当前目录下{} 存在同名文件：{}，文件大小：{}", nodeId, tFile.getName(), tFile.getSize());
+            }
+        }
+        // 对文件名进行去重，只保留最新的一个
+        return tFileSets;
     }
 
 
@@ -125,6 +138,9 @@ public class AliYunDriverClientService {
         UploadPreResult uploadPreResult = JsonUtil.readValue(json, UploadPreResult.class);
         List<UploadPreRequest.PartInfo> partInfoList = uploadPreResult.getPart_info_list();
         if (partInfoList != null) {
+            if (size > 0) {
+                virtualTFileService.createTFile(parent.getFile_id(), uploadPreResult);
+            }
             LOGGER.info("文件预处理成功，开始上传。文件名：{}，上传URL数量：{}", path, partInfoList.size());
 
             byte[] buffer = new byte[chunkSize];
@@ -133,12 +149,14 @@ public class AliYunDriverClientService {
                 try {
                     int read = IOUtils.read(inputStream, buffer, 0, buffer.length);
                     if (read == -1) {
+                        LOGGER.info("文件上传结束。文件名：{}，当前进度：{}/{}", path, (i + 1), partInfoList.size());
                         return;
                     }
                     client.upload(partInfo.getUpload_url(), buffer, 0, read);
-                    LOGGER.info("文件正在上传。文件名：{}，当前进度：{}/{}", path, (i+1), partInfoList.size());
-
+                    virtualTFileService.updateLength(parent.getFile_id(), uploadPreResult.getFile_id(), buffer.length);
+                    LOGGER.info("文件正在上传。文件名：{}，当前进度：{}/{}", path, (i + 1), partInfoList.size());
                 } catch (IOException e) {
+                    virtualTFileService.remove(parent.getFile_id(), uploadPreResult.getFile_id());
                     throw new WebdavException(e);
                 }
             }
@@ -152,26 +170,8 @@ public class AliYunDriverClientService {
         uploadFinalRequest.setUpload_id(uploadPreResult.getUpload_id());
 
         client.post("/file/complete", uploadFinalRequest);
+        virtualTFileService.remove(parent.getFile_id(), uploadPreResult.getFile_id());
         LOGGER.info("文件上传成功。文件名：{}", path);
-//        if (!uploadPreResult.getName().equals(pathInfo.getName())) {
-//            LOGGER.info("上传文件名{}与原文件名{}不同，对文件进行重命名", uploadPreResult.getName(), pathInfo.getName());
-//            TFile oldFile = getNodeIdByPath2(path);
-//            // 如果旧文件存在，则先删除
-//            if (oldFile != null) {
-//                LOGGER.info("旧文件{}还存在，大小为{}，进行删除操作，可前往网页版的回收站查看", path, oldFile.getSize());
-//                remove(path);
-//                try {
-//                    Thread.sleep(1500);
-//                } catch (InterruptedException e) {
-//                    // no
-//                }
-//            }
-//            RenameRequest renameRequest = new RenameRequest();
-//            renameRequest.setDrive_id(client.getDriveId());
-//            renameRequest.setFile_id(oldFile.getFile_id());
-//            renameRequest.setName(pathInfo.getName());
-//            client.post("/file/update", renameRequest);
-//        }
         clearCache();
     }
 
