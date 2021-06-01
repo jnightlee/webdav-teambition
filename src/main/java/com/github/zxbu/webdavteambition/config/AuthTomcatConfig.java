@@ -1,6 +1,8 @@
 package com.github.zxbu.webdavteambition.config;
 
-import org.apache.catalina.authenticator.DigestAuthenticator;
+import org.apache.catalina.CredentialHandler;
+import org.apache.catalina.authenticator.AuthenticatorBase;
+import org.apache.catalina.authenticator.BasicAuthenticator;
 import org.apache.catalina.realm.GenericPrincipal;
 import org.apache.catalina.realm.MessageDigestCredentialHandler;
 import org.apache.catalina.realm.RealmBase;
@@ -46,11 +48,11 @@ public class AuthTomcatConfig implements WebServerFactoryCustomizer<Configurable
                 }
             };
 
-            MessageDigestCredentialHandler credentialHandler = new MessageDigestCredentialHandler();
+            CredentialHandler credentialHandler = new MessageDigestCredentialHandler();
             realm.setCredentialHandler(credentialHandler);
             context.setRealm(realm);
 
-            DigestAuthenticator digestAuthenticator = new DigestAuthenticator();
+            AuthenticatorBase digestAuthenticator = new BasicAuthenticator();
             SecurityConstraint securityConstraint = new SecurityConstraint();
             securityConstraint.setAuthConstraint(true);
             securityConstraint.addAuthRole("**");
