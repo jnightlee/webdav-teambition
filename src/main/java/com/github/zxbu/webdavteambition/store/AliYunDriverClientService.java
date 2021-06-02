@@ -9,6 +9,7 @@ import com.github.zxbu.webdavteambition.model.result.TFileListResult;
 import com.github.zxbu.webdavteambition.model.result.UploadPreResult;
 import com.github.zxbu.webdavteambition.util.JsonUtil;
 import net.sf.webdav.exceptions.WebdavException;
+import okhttp3.HttpUrl;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,13 +147,32 @@ public class AliYunDriverClientService {
             byte[] buffer = new byte[chunkSize];
             for (int i = 0; i < partInfoList.size(); i++) {
                 UploadPreRequest.PartInfo partInfo = partInfoList.get(i);
+                String uploadUrl = partInfo.getUpload_url();
+
+                long expires = Long.parseLong(Objects.requireNonNull(Objects.requireNonNull(HttpUrl.parse(uploadUrl)).queryParameter("x-oss-expires")));
+                if (System.currentTimeMillis() / 1000 >= expires) {
+                    // 已过期，重新置换UploadUrl
+                    RefreshUploadUrlRequest refreshUploadUrlRequest = new RefreshUploadUrlRequest();
+                    refreshUploadUrlRequest.setDrive_id(client.getDriveId());
+                    refreshUploadUrlRequest.setUpload_id(uploadPreResult.getUpload_id());
+                    refreshUploadUrlRequest.setFile_id(uploadPreResult.getFile_id());
+                    refreshUploadUrlRequest.setPart_info_list(part_info_list);
+                    String refreshJson = client.post("/file/get_upload_url", refreshUploadUrlRequest);
+                    UploadPreResult refreshResult = JsonUtil.readValue(refreshJson, UploadPreResult.class);
+                    for (int j = i; j < partInfoList.size(); j++) {
+                        UploadPreRequest.PartInfo oldInfo = partInfoList.get(j);
+                        UploadPreRequest.PartInfo newInfo = refreshResult.getPart_info_list().stream().filter(p -> p.getPart_number().equals(oldInfo.getPart_number())).findAny().orElseThrow(NullPointerException::new);
+                        oldInfo.setUpload_url(newInfo.getUpload_url());
+                    }
+                }
+
                 try {
                     int read = IOUtils.read(inputStream, buffer, 0, buffer.length);
                     if (read == -1) {
                         LOGGER.info("文件上传结束。文件名：{}，当前进度：{}/{}", path, (i + 1), partInfoList.size());
                         return;
                     }
-                    client.upload(partInfo.getUpload_url(), buffer, 0, read);
+                    client.upload(uploadUrl, buffer, 0, read);
                     virtualTFileService.updateLength(parent.getFile_id(), uploadPreResult.getFile_id(), buffer.length);
                     LOGGER.info("文件正在上传。文件名：{}，当前进度：{}/{}", path, (i + 1), partInfoList.size());
                 } catch (IOException e) {
@@ -174,6 +194,7 @@ public class AliYunDriverClientService {
         LOGGER.info("文件上传成功。文件名：{}", path);
         clearCache();
     }
+
 
     public void rename(String sourcePath, String newName) {
         sourcePath = normalizingPath(sourcePath);
