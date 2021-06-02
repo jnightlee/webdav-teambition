@@ -150,7 +150,7 @@ public class AliYunDriverClientService {
                 String uploadUrl = partInfo.getUpload_url();
 
                 long expires = Long.parseLong(Objects.requireNonNull(Objects.requireNonNull(HttpUrl.parse(uploadUrl)).queryParameter("x-oss-expires")));
-                if (System.currentTimeMillis() / 1000 >= expires) {
+                if (System.currentTimeMillis() / 1000 + 10 >= expires) {
                     // 已过期，重新置换UploadUrl
                     RefreshUploadUrlRequest refreshUploadUrlRequest = new RefreshUploadUrlRequest();
                     refreshUploadUrlRequest.setDrive_id(client.getDriveId());
