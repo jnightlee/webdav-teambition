@@ -147,9 +147,8 @@ public class AliYunDriverClientService {
             byte[] buffer = new byte[chunkSize];
             for (int i = 0; i < partInfoList.size(); i++) {
                 UploadPreRequest.PartInfo partInfo = partInfoList.get(i);
-                String uploadUrl = partInfo.getUpload_url();
 
-                long expires = Long.parseLong(Objects.requireNonNull(Objects.requireNonNull(HttpUrl.parse(uploadUrl)).queryParameter("x-oss-expires")));
+                long expires = Long.parseLong(Objects.requireNonNull(Objects.requireNonNull(HttpUrl.parse(partInfo.getUpload_url())).queryParameter("x-oss-expires")));
                 if (System.currentTimeMillis() / 1000 + 10 >= expires) {
                     // 已过期，重新置换UploadUrl
                     RefreshUploadUrlRequest refreshUploadUrlRequest = new RefreshUploadUrlRequest();
@@ -172,7 +171,7 @@ public class AliYunDriverClientService {
                         LOGGER.info("文件上传结束。文件名：{}，当前进度：{}/{}", path, (i + 1), partInfoList.size());
                         return;
                     }
-                    client.upload(uploadUrl, buffer, 0, read);
+                    client.upload(partInfo.getUpload_url(), buffer, 0, read);
                     virtualTFileService.updateLength(parent.getFile_id(), uploadPreResult.getFile_id(), buffer.length);
                     LOGGER.info("文件正在上传。文件名：{}，当前进度：{}/{}", path, (i + 1), partInfoList.size());
                 } catch (IOException e) {
