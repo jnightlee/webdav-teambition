@@ -1,17 +1,17 @@
 package com.github.zxbu.webdavteambition.model;
 
 public class Page {
-    private int offset;
+    private String marker;
     private int limit;
     private String order_by;
     private String order_direction;
 
-    public int getOffset() {
-        return offset;
+    public String getMarker() {
+        return marker;
     }
 
-    public void setOffset(int offset) {
-        this.offset = offset;
+    public void setMarker(String marker) {
+        this.marker = marker;
     }
 
     public int getLimit() {

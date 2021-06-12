@@ -59,17 +59,7 @@ public class AliYunDriverClientService {
     }
 
     private Set<TFile> getTFiles2(String nodeId) {
-        FileListRequest listQuery = new FileListRequest();
-        listQuery.setOffset(0);
-        listQuery.setLimit(10000);
-        listQuery.setOrder_by("updated_at");
-        listQuery.setOrder_direction("DESC");
-        listQuery.setDrive_id(client.getDriveId());
-        listQuery.setParent_file_id(nodeId);
-        String json = client.post("/file/list", listQuery);
-        TFileListResult<TFile> tFileListResult = JsonUtil.readValue(json, new TypeReference<TFileListResult<TFile>>() {
-        });
-        List<TFile> tFileList = tFileListResult.getItems();
+        List<TFile> tFileList = fileListFromApi(nodeId, null, new ArrayList<>());
         tFileList.sort(Comparator.comparing(TFile::getUpdated_at).reversed());
         Set<TFile> tFileSets = new LinkedHashSet<>();
         for (TFile tFile : tFileList) {
@@ -79,6 +69,24 @@ public class AliYunDriverClientService {
         }
         // 对文件名进行去重，只保留最新的一个
         return tFileSets;
+    }
+
+    private List<TFile> fileListFromApi(String nodeId, String marker, List<TFile> all) {
+        FileListRequest listQuery = new FileListRequest();
+        listQuery.setMarker(marker);
+        listQuery.setLimit(100);
+        listQuery.setOrder_by("updated_at");
+        listQuery.setOrder_direction("DESC");
+        listQuery.setDrive_id(client.getDriveId());
+        listQuery.setParent_file_id(nodeId);
+        String json = client.post("/file/list", listQuery);
+        TFileListResult<TFile> tFileListResult = JsonUtil.readValue(json, new TypeReference<TFileListResult<TFile>>() {
+        });
+        all.addAll(tFileListResult.getItems());
+        if (!StringUtils.hasLength(tFileListResult.getNext_marker())) {
+            return all;
+        }
+        return fileListFromApi(nodeId, tFileListResult.getNext_marker(), all);
     }
 
 
