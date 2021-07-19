@@ -7,4 +7,5 @@ RUN cd /tmp/code && mvn clean package -Dmaven.test.skip=true -Dmaven.javadoc.ski
 FROM openjdk:11-jdk-oracle
 COPY --from=maven /tmp/code/target/*.jar /webdav.jar
 EXPOSE 8080
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/webdav.jar"]
+ENV JAVA_OPTS="-Xmx1g"
+ENTRYPOINT ["java","${JAVA_OPTS}","-Djava.security.egd=file:/dev/./urandom","-jar","/webdav.jar"]
