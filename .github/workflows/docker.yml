@@ -71,5 +71,5 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           tags: |
-            tangcuyu/webdav-aliyundriver:latest
-            tangcuyu/webdav-aliyundriver:${{ steps.date.outputs.today }}
+            zx5253/webdav-aliyundriver:latest
+            zx5253/webdav-aliyundriver:${{ steps.date.outputs.today }}
