@@ -61,27 +61,31 @@ public class DoGet extends DoHead {
             OutputStream out = resp.getOutputStream();
             InputStream in = _store.getResourceContent(transaction, path);
             try {
-                int read = -1;
-                byte[] copyBuffer = new byte[BUF_SIZE];
+                if (in != null) {
+                    int read = -1;
+                    byte[] copyBuffer = new byte[BUF_SIZE];
 
-                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
-                    out.write(copyBuffer, 0, read);
+                    while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
+                        out.write(copyBuffer, 0, read);
+                    }
                 }
             } finally {
                 // flushing causes a IOE if a file is opened on the webserver
                 // client disconnected before server finished sending response
                 try {
-                    in.close();
+                    if (in != null) {
+                        in.close();
+                    }
                 } catch (Exception e) {
                     LOG.warn("Closing InputStream causes Exception!\n"
-                            + e.toString());
+                            ,e);
                 }
                 try {
                     out.flush();
                     out.close();
                 } catch (Exception e) {
                     LOG.warn("Flushing OutputStream causes Exception!\n"
-                            + e.toString());
+                            ,e);
                 }
             }
         } catch (Exception e) {

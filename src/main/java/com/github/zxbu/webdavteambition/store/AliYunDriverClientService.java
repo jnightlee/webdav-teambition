@@ -2,6 +2,8 @@ package com.github.zxbu.webdavteambition.store;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.zxbu.webdavteambition.client.AliYunDriverClient;
 import com.github.zxbu.webdavteambition.model.*;
 import com.github.zxbu.webdavteambition.model.result.TFile;
@@ -21,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class AliYunDriverClientService {
@@ -29,7 +32,12 @@ public class AliYunDriverClientService {
     private static String rootPath = "/";
     private static int chunkSize = 10485760; // 10MB
     private TFile rootTFile = null;
-    private final ThreadLocal<Map<String, Set<TFile>>> tFilesCache = new ThreadLocal<>();
+
+    private static Cache<String, Set<TFile>> tFilesCache = Caffeine.newBuilder()
+            .initialCapacity(128)
+            .maximumSize(1024)
+            .expireAfterWrite(1, TimeUnit.MINUTES)
+            .build();
 
     private final AliYunDriverClient client;
 
@@ -42,12 +50,7 @@ public class AliYunDriverClientService {
     }
 
     public Set<TFile> getTFiles(String nodeId) {
-        Map<String, Set<TFile>> map = tFilesCache.get();
-        if (map == null) {
-            map = new ConcurrentHashMap<>();
-            tFilesCache.set(map);
-        }
-        Set<TFile> tFiles = map.computeIfAbsent(nodeId, key -> {
+        Set<TFile> tFiles = tFilesCache.get(nodeId, key -> {
             // 获取真实的文件列表
             return getTFiles2(nodeId);
         });
@@ -276,14 +279,14 @@ public class AliYunDriverClientService {
         return getNodeIdByPath2(path);
     }
 
-    public InputStream download(String path) {
+    public InputStream download(String path, String range) {
         TFile file = getTFileByPath(path);
         DownloadRequest downloadRequest = new DownloadRequest();
         downloadRequest.setDrive_id(client.getDriveId());
         downloadRequest.setFile_id(file.getFile_id());
         String json = client.post("/file/get_download_url", downloadRequest);
         Object url = JsonUtil.getJsonNodeValue(json, "url");
-        return client.download(url.toString());
+        return client.download(url.toString(), range);
     }
 
     private TFile getNodeIdByPath2(String path) {
@@ -357,11 +360,7 @@ public class AliYunDriverClientService {
         return path;
     }
 
-    public void clearCache() {
-        Map<String, Set<TFile>> map = tFilesCache.get();
-        if (map != null) {
-            map.clear();
-        }
-
+    private void clearCache() {
+        tFilesCache.invalidateAll();
     }
 }

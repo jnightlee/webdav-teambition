@@ -3,6 +3,7 @@ package com.github.zxbu.webdavteambition.model;
 public class DownloadRequest {
     private String drive_id;
     private String file_id;
+    private Integer expire_sec = 14400;
 
     public String getDrive_id() {
         return drive_id;
@@ -18,5 +19,13 @@ public class DownloadRequest {
 
     public void setFile_id(String file_id) {
         this.file_id = file_id;
+    }
+
+    public Integer getExpire_sec() {
+        return expire_sec;
+    }
+
+    public void setExpire_sec(Integer expire_sec) {
+        this.expire_sec = expire_sec;
     }
 }

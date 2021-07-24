@@ -36,31 +36,29 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
 
     @Override
     public void destroy() {
-        LOGGER.debug("destroy");
+        LOGGER.info("destroy");
 
     }
 
     @Override
     public ITransaction begin(Principal principal, HttpServletRequest req, HttpServletResponse resp) {
-        LOGGER.debug("begin");
-        aliYunDriverClientService.clearCache();
+        LOGGER.info("begin");
         return new Transaction(principal, req, resp);
     }
 
     @Override
     public void checkAuthentication(ITransaction transaction) {
-        LOGGER.debug("checkAuthentication");
+        LOGGER.info("checkAuthentication");
     }
 
     @Override
     public void commit(ITransaction transaction) {
-        aliYunDriverClientService.clearCache();
-        LOGGER.debug("commit");
+        LOGGER.info("commit");
     }
 
     @Override
     public void rollback(ITransaction transaction) {
-        LOGGER.debug("rollback");
+        LOGGER.info("rollback");
 
     }
 
@@ -79,8 +77,10 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
 
     @Override
     public InputStream getResourceContent(ITransaction transaction, String resourceUri) {
-        LOGGER.debug("getResourceContent: {}", resourceUri);
-        return aliYunDriverClientService.download(resourceUri);
+        LOGGER.info("getResourceContent: {}", resourceUri);
+        String range = transaction.getRequest().getHeader("range");
+        return aliYunDriverClientService.download(resourceUri, range);
+
     }
 
     @Override
@@ -113,7 +113,7 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
 
     @Override
     public String[] getChildrenNames(ITransaction transaction, String folderUri) {
-        LOGGER.debug("getChildrenNames: {}", folderUri);
+        LOGGER.info("getChildrenNames: {}", folderUri);
         TFile tFile = aliYunDriverClientService.getTFileByPath(folderUri);
         if (tFile.getType().equals(FileType.file.name())) {
             return new String[0];
@@ -126,7 +126,7 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
 
     @Override
     public long getResourceLength(ITransaction transaction, String path) {
-        LOGGER.debug("getResourceLength: {}", path);
+        LOGGER.info("getResourceLength: {}", path);
         TFile tFile = aliYunDriverClientService.getTFileByPath(path);
         if (tFile == null || tFile.getSize() == null) {
             return 384;
@@ -164,7 +164,7 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
     public StoredObject getStoredObject(ITransaction transaction, String uri) {
 
 
-        LOGGER.debug("getStoredObject: {}", uri);
+        LOGGER.info("getStoredObject: {}", uri);
         TFile tFile = aliYunDriverClientService.getTFileByPath(uri);
         if (tFile != null) {
             StoredObject so = new StoredObject();

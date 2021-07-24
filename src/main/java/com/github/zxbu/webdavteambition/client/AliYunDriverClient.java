@@ -7,6 +7,7 @@ import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -92,8 +93,12 @@ public class AliYunDriverClient {
     }
 
 
-    public InputStream download(String url) {
-        Request request = new Request.Builder().header("referer", "https://www.aliyundrive.com/").url(url).build();
+    public InputStream download(String url, String range) {
+        Request.Builder builder = new Request.Builder().header("referer", "https://www.aliyundrive.com/");
+        if (StringUtils.hasLength(range)) {
+            builder.header("range", range);
+        }
+        Request request = builder.url(url).build();
         Response response = null;
         try {
             response = okHttpClient.newCall(request).execute();
