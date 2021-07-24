@@ -42,7 +42,14 @@ public class AliYunDriverClient {
             @Override
             public Request authenticate(Route route, Response response) throws IOException {
                 if (response.code() == 401 && response.body() != null  && response.body().string().contains("AccessToken")) {
-                    String refreshTokenResult = post("https://websv.aliyundrive.com/token/refresh", Collections.singletonMap("refresh_token", readRefreshToken()));
+                    String refreshTokenResult;
+                    try {
+                        refreshTokenResult = post("https://websv.aliyundrive.com/token/refresh", Collections.singletonMap("refresh_token", readRefreshToken()));
+                    } catch (Exception e) {
+                        // 如果置换token失败，先清空原token文件，再尝试一次
+                        deleteRefreshTokenFile();
+                        refreshTokenResult = post("https://websv.aliyundrive.com/token/refresh", Collections.singletonMap("refresh_token", readRefreshToken()));
+                    }
                     String accessToken = (String) JsonUtil.getJsonNodeValue(refreshTokenResult, "access_token");
                     String refreshToken = (String) JsonUtil.getJsonNodeValue(refreshTokenResult, "refresh_token");
                     Assert.hasLength(accessToken, "获取accessToken失败");
@@ -176,6 +183,16 @@ public class AliYunDriverClient {
             return url;
         }
         return aliYunDriveProperties.getUrl() + url;
+    }
+
+    private void deleteRefreshTokenFile() {
+        String refreshTokenPath = aliYunDriveProperties.getWorkDir() + "refresh-token";
+        Path path = Paths.get(refreshTokenPath);
+        try {
+            Files.delete(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private String readRefreshToken() {
