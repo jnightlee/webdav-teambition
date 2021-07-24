@@ -12,6 +12,7 @@ import com.github.zxbu.webdavteambition.model.result.UploadPreResult;
 import com.github.zxbu.webdavteambition.util.JsonUtil;
 import net.sf.webdav.exceptions.WebdavException;
 import okhttp3.HttpUrl;
+import okhttp3.Response;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -279,14 +281,15 @@ public class AliYunDriverClientService {
         return getNodeIdByPath2(path);
     }
 
-    public InputStream download(String path, String range) {
+    public Response download(String path, HttpServletRequest request, long size ) {
         TFile file = getTFileByPath(path);
         DownloadRequest downloadRequest = new DownloadRequest();
         downloadRequest.setDrive_id(client.getDriveId());
         downloadRequest.setFile_id(file.getFile_id());
         String json = client.post("/file/get_download_url", downloadRequest);
         Object url = JsonUtil.getJsonNodeValue(json, "url");
-        return client.download(url.toString(), range);
+        LOGGER.debug("{} url = {}", path, url);
+        return client.download(url.toString(), request, size);
     }
 
     private TFile getNodeIdByPath2(String path) {

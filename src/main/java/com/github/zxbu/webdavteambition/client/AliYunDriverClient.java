@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -93,16 +94,32 @@ public class AliYunDriverClient {
     }
 
 
-    public InputStream download(String url, String range) {
+    public Response download(String url, HttpServletRequest httpServletRequest, long size ) {
         Request.Builder builder = new Request.Builder().header("referer", "https://www.aliyundrive.com/");
-        if (StringUtils.hasLength(range)) {
+        String range = httpServletRequest.getHeader("range");
+        if (range != null) {
+            // 如果range最后 >= size， 则去掉
+            String[] split = range.split("-");
+            if (split.length == 2) {
+                String end = split[1];
+                if (Long.parseLong(end) >= size) {
+                    range = range.substring(0, range.lastIndexOf('-') + 1);
+                }
+            }
             builder.header("range", range);
         }
+
+        String ifRange = httpServletRequest.getHeader("if-range");
+        if (ifRange != null) {
+            builder.header("if-range", ifRange);
+        }
+
+
         Request request = builder.url(url).build();
         Response response = null;
         try {
             response = okHttpClient.newCall(request).execute();
-            return response.body().byteStream();
+            return response;
         } catch (IOException e) {
             throw new WebdavException(e);
         }

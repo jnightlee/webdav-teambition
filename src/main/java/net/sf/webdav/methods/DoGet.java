@@ -32,6 +32,7 @@ import net.sf.webdav.IWebdavStore;
 import net.sf.webdav.StoredObject;
 import net.sf.webdav.WebdavStatus;
 import net.sf.webdav.locking.ResourceLocks;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 
 public class DoGet extends DoHead {
 
@@ -62,12 +63,9 @@ public class DoGet extends DoHead {
             InputStream in = _store.getResourceContent(transaction, path);
             try {
                 if (in != null) {
-                    int read = -1;
-                    byte[] copyBuffer = new byte[BUF_SIZE];
-
-                    while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
-                        out.write(copyBuffer, 0, read);
-                    }
+                    LOG.debug("开始 {}, ", path);
+                    IOUtils.copyLarge(in, out);
+                    LOG.debug("结束 {}", path);
                 }
             } finally {
                 // flushing causes a IOE if a file is opened on the webserver
@@ -77,18 +75,20 @@ public class DoGet extends DoHead {
                         in.close();
                     }
                 } catch (Exception e) {
-                    LOG.warn("Closing InputStream causes Exception!\n"
+                    LOG.warn("{} Closing InputStream causes Exception!\n", path
                             ,e);
                 }
                 try {
                     out.flush();
                     out.close();
                 } catch (Exception e) {
-                    LOG.warn("Flushing OutputStream causes Exception!\n"
+                    LOG.warn("{} Flushing OutputStream causes Exception!\n", path
                             ,e);
                 }
             }
         } catch (Exception e) {
+            LOG.warn("{} doBody causes Exception!\n", path
+                    ,e);
             LOG.trace(e.toString());
         }
     }

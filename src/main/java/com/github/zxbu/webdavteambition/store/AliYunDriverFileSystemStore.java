@@ -8,6 +8,7 @@ import net.sf.webdav.IWebdavStore;
 import net.sf.webdav.StoredObject;
 import net.sf.webdav.Transaction;
 import net.sf.webdav.exceptions.WebdavException;
+import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
+import java.util.Enumeration;
 import java.util.Set;
 
 public class AliYunDriverFileSystemStore implements IWebdavStore {
@@ -42,23 +44,23 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
 
     @Override
     public ITransaction begin(Principal principal, HttpServletRequest req, HttpServletResponse resp) {
-        LOGGER.info("begin");
+        LOGGER.debug("begin");
         return new Transaction(principal, req, resp);
     }
 
     @Override
     public void checkAuthentication(ITransaction transaction) {
-        LOGGER.info("checkAuthentication");
+        LOGGER.debug("checkAuthentication");
     }
 
     @Override
     public void commit(ITransaction transaction) {
-        LOGGER.info("commit");
+        LOGGER.debug("commit");
     }
 
     @Override
     public void rollback(ITransaction transaction) {
-        LOGGER.info("rollback");
+        LOGGER.debug("rollback");
 
     }
 
@@ -78,8 +80,22 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
     @Override
     public InputStream getResourceContent(ITransaction transaction, String resourceUri) {
         LOGGER.info("getResourceContent: {}", resourceUri);
-        String range = transaction.getRequest().getHeader("range");
-        return aliYunDriverClientService.download(resourceUri, range);
+        Enumeration<String> headerNames = transaction.getRequest().getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String s = headerNames.nextElement();
+            LOGGER.debug("{} request: {} = {}",resourceUri,  s, transaction.getRequest().getHeader(s));
+        }
+        HttpServletResponse response = transaction.getResponse();
+        long size = getResourceLength(transaction, resourceUri);
+        Response downResponse = aliYunDriverClientService.download(resourceUri, transaction.getRequest(), size);
+        response.setContentLengthLong(downResponse.body().contentLength());
+        LOGGER.debug("{} code = {}", resourceUri, downResponse.code());
+        for (String name : downResponse.headers().names()) {
+            LOGGER.debug("{} downResponse: {} = {}", resourceUri, name, downResponse.header(name));
+            response.addHeader(name, downResponse.header(name));
+        }
+        response.setStatus(downResponse.code());
+        return downResponse.body().byteStream();
 
     }
 
