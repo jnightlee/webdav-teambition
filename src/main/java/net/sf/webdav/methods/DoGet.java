@@ -18,6 +18,7 @@ package net.sf.webdav.methods;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -145,7 +146,7 @@ public class DoGet extends DoHead {
                     childrenTemp.append("\">");
                     childrenTemp.append("<td>");
                     childrenTemp.append("<a href=\"");
-                    childrenTemp.append(child);
+                    childrenTemp.append(URLEncoder.encode(child, "utf-8"));
                     StoredObject obj= _store.getStoredObject(transaction, path+"/"+child);
                     if (obj == null)
                     {
