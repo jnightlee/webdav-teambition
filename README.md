@@ -37,7 +37,9 @@ docker run -d --name=webdav-aliyundriver --restart=always -p 8080:8080  -v /etc/
 
 ```
 # QQ群
-> 群号：789738128
+> 群号（已满）：789738128
+
+> 二群群号：979024890
 
 # 新手教程
 ## 群晖
