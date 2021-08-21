@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
 import java.util.Enumeration;
+import java.util.Optional;
 import java.util.Set;
 
 public class AliYunDriverFileSystemStore implements IWebdavStore {
@@ -107,7 +108,8 @@ public class AliYunDriverFileSystemStore implements IWebdavStore {
 
         long contentLength = request.getContentLength();
         if (contentLength < 0) {
-            contentLength = Long.parseLong(request.getHeader("content-length"));
+            contentLength = Long.parseLong(Optional.ofNullable(request.getHeader("content-length"))
+                    .orElse(request.getHeader("X-Expected-Entity-Length")));
         }
         aliYunDriverClientService.uploadPre(resourceUri, contentLength, content);
 
