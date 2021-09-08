@@ -34,12 +34,16 @@ docker run -d --name=webdav-aliyundriver --restart=always -p 8080:8080  -v /etc/
     WebDav账户，默认admin
 --aliyundrive.auth.password=admin
     WebDav密码，默认admin
-
+--aliyundrive.work-dir=/etc/aliyun-driver/
+    token挂载路径（如果多开的话，需修改此配置）
+    
 ```
 # QQ群
 > 群号（已满）：789738128
 
-> 二群群号：979024890
+> 二群群号（已满）：979024890
+
+> 三群群号：212673498
 
 # 新手教程
 ## 群晖
