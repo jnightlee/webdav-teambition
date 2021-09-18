@@ -18,7 +18,7 @@ package net.sf.webdav.methods;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URLEncoder;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -34,6 +34,7 @@ import net.sf.webdav.StoredObject;
 import net.sf.webdav.WebdavStatus;
 import net.sf.webdav.locking.ResourceLocks;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.springframework.web.util.UriUtils;
 
 public class DoGet extends DoHead {
 
@@ -146,7 +147,7 @@ public class DoGet extends DoHead {
                     childrenTemp.append("\">");
                     childrenTemp.append("<td>");
                     childrenTemp.append("<a href=\"");
-                    childrenTemp.append(URLEncoder.encode(child, "utf-8"));
+                    childrenTemp.append(UriUtils.encode(child, "utf-8"));
                     StoredObject obj= _store.getStoredObject(transaction, path+"/"+child);
                     if (obj == null)
                     {
@@ -209,7 +210,7 @@ public class DoGet extends DoHead {
     /**
      * Return the CSS styles used to display the HTML representation
      * of the webdav content.
-     * 
+     *
      * @return
      */
     protected String getCSS()
@@ -271,7 +272,7 @@ public class DoGet extends DoHead {
 
     /**
      * Return the header to be displayed in front of the folder content
-     * 
+     *
      * @param transaction
      * @param path
      * @param resp
@@ -286,7 +287,7 @@ public class DoGet extends DoHead {
 
     /**
      * Return the footer to be displayed after the folder content
-     * 
+     *
      * @param transaction
      * @param path
      * @param resp
