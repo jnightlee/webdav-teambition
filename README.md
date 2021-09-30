@@ -1,4 +1,27 @@
+
 说明：[1.1.0版本](https://github.com/zxbu/webdav-aliyundriver/releases/tag/v1.1.0)支持阿里Teambition网盘的webdav协议，后续的2.x版本仅支持阿里云盘，不再维护Teambition网盘版本
+
+- [webdav-aliyundriver](#webdav-aliyundriver)
+- [如何使用](#如何使用)
+  - [Jar包运行](#jar包运行)
+  - [容器运行](#容器运行)
+  - [Docker-Compose](#docker-compose)
+- [参数说明](#参数说明)
+- [QQ群](#qq群)
+- [新手教程](#新手教程)
+  - [群晖](#群晖)
+  - [Windows10](#windows10)
+  - [Linux](#linux)
+  - [Mac](#mac)
+- [客户端兼容性](#客户端兼容性)
+- [浏览器获取refreshToken方式](#浏览器获取refreshtoken方式)
+- [功能说明](#功能说明)
+  - [支持的功能](#支持的功能)
+  - [暂不支持的功能](#暂不支持的功能)
+  - [已知问题](#已知问题)
+  - [TODO](#todo)
+- [免责声明](#免责声明)
+
 # webdav-aliyundriver
 本项目实现了阿里云盘的webdav协议，只需要简单的配置一下，就可以让阿里云盘变身为webdav协议的文件服务器。
 基于此，你可以把阿里云盘挂载为Windows、Linux、Mac系统的磁盘，可以通过NAS系统做文件管理或文件同步，更多玩法等你挖掘
@@ -21,6 +44,32 @@ docker run -d --name=webdav-aliyundriver --restart=always -p 8080:8080  -v /etc/
 # JAVA_OPTS 可修改最大内存占用，比如 -e JAVA_OPTS="-Xmx512m" 表示最大内存限制为512m
 ```
 
+## Docker-Compose
+```yml
+version: "3.0"
+services:
+  webdav-aliyundriver:
+    image: zx5253/webdav-aliyundriver
+    container_name: aliyundriver
+    environment:
+      - TZ=Asia/Shanghai
+      - ALIYUNDRIVE_REFRESH_TOKEN=refreshToken
+      - ALIYUNDRIVE_AUTH_USER-NAME=admin
+      - ALIYUNDRIVE_AUTH_PASSWORD=admin
+      - JAVA_OPTS=-Xmx1g
+    volumes:
+      - /etc/aliyun-driver/:/etc/aliyun-driver/
+    ports:
+      - 6666:8080
+    restart: always
+
+# “refreshToken”请根据下文说明自行获取。
+# “ALIYUNDRIVE_AUTH_USER-NAME”和“ALIYUNDRIVE_AUTH_PASSWORD”为连接用户名和密码，建议更改。
+# “/etc/aliyun-driver/:/etc/aliyun-driver/”，可以把冒号前改为指定目录，比如“/homes/USER/docker/alidriver/:/etc/aliyun-driver/”。
+# 删除了“/etc/localtime:/etc/localtime”，如有需要同步时间请自行添加在environment下。
+# 端口6666可自行按需更改，此端口为WebDAV连接端口,8080为容器内配置端口，修改请量力而为。
+# 建议不要保留这些中文注释，以防报错，比如QNAP。
+```
 
 # 参数说明
 ```bash
