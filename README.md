@@ -54,7 +54,7 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - ALIYUNDRIVE_REFRESH_TOKEN=refreshToken
-      - ALIYUNDRIVE_AUTH_USER-NAME=admin
+      - ALIYUNDRIVE_AUTH_USER_NAME=admin
       - ALIYUNDRIVE_AUTH_PASSWORD=admin
       - JAVA_OPTS=-Xmx1g
     volumes:
