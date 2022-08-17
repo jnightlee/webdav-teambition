@@ -23,10 +23,12 @@
 
 package net.sf.webdav;
 
+import net.sf.webdav.exceptions.WebdavException;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 import java.security.Principal;
-
-import net.sf.webdav.exceptions.WebdavException;
 
 /**
  * Interface for simple implementation of any store for the WebdavServlet
@@ -48,15 +50,15 @@ public interface IWebdavStore {
      * or {@link #rollback()}. If only non-read methods have been called, the
      * request will be terminated by a {@link #commit()}. This method will be
      * called by (@link WebdavStoreAdapter} at the beginning of each request.
-     * 
-     * 
+     *
+     *
      * @param principal
      *      the principal that started this request or <code>null</code> if
      *      there is non available
-     * 
+     *
      * @throws WebdavException
      */
-    ITransaction begin(Principal principal);
+    ITransaction begin(Principal principal, HttpServletRequest req, HttpServletResponse resp);
 
     /**
      * Checks if authentication information passed in is valid. If not throws an

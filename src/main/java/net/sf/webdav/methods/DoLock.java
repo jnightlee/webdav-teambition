@@ -209,6 +209,9 @@ public class DoLock extends AbstractMethod {
                 return;
             }
             nullSo = _store.getStoredObject(transaction, _path);
+            if (nullSo == null) {
+                nullSo = new StoredObject();
+            }
             // define the newly created resource as null-resource
             nullSo.setNullResource(true);
 
@@ -416,8 +419,13 @@ public class DoLock extends AbstractMethod {
 
                         if (currentNode.getNodeType() == Node.ELEMENT_NODE
 							 || currentNode.getNodeType() == Node.TEXT_NODE) {
-							_lockOwner = currentNode.getFirstChild()
-									.getNodeValue();
+                            if (currentNode.getFirstChild() != null) {
+                                _lockOwner = currentNode.getFirstChild()
+                                        .getNodeValue();
+                            } else {
+                                _lockOwner = currentNode.toString();
+                            }
+
                         }
                     }
                 }

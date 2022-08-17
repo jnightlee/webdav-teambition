@@ -173,7 +173,7 @@ public class DoPropfind extends AbstractMethod {
             } catch (AccessDeniedException e) {
                 resp.sendError(WebdavStatus.SC_FORBIDDEN);
             } catch (WebdavException e) {
-                LOG.warn("Sending internal error!");
+                LOG.warn("Sending internal error!", e);
                 resp.sendError(WebdavStatus.SC_INTERNAL_SERVER_ERROR);
             } catch (ServletException e) {
                 e.printStackTrace(); // To change body of catch statement use

@@ -3,49 +3,31 @@ package com.github.zxbu.webdavteambition.model;
 import java.util.List;
 
 public class MoveRequest {
-    private String driveId;
-    private String parentId;
-    private String orgId;
-    private boolean sameLevel = false;
-    private List<MoveRequestId> ids;
+    private String drive_id;
+    private String file_id;
+    private String to_parent_file_id;
 
-    public String getDriveId() {
-        return driveId;
+    public String getDrive_id() {
+        return drive_id;
     }
 
-    public void setDriveId(String driveId) {
-        this.driveId = driveId;
+    public void setDrive_id(String drive_id) {
+        this.drive_id = drive_id;
     }
 
-    public String getParentId() {
-        return parentId;
+    public String getFile_id() {
+        return file_id;
     }
 
-    public void setParentId(String parentId) {
-        this.parentId = parentId;
+    public void setFile_id(String file_id) {
+        this.file_id = file_id;
     }
 
-    public String getOrgId() {
-        return orgId;
+    public String getTo_parent_file_id() {
+        return to_parent_file_id;
     }
 
-    public void setOrgId(String orgId) {
-        this.orgId = orgId;
-    }
-
-    public boolean isSameLevel() {
-        return sameLevel;
-    }
-
-    public void setSameLevel(boolean sameLevel) {
-        this.sameLevel = sameLevel;
-    }
-
-    public List<MoveRequestId> getIds() {
-        return ids;
-    }
-
-    public void setIds(List<MoveRequestId> ids) {
-        this.ids = ids;
+    public void setTo_parent_file_id(String to_parent_file_id) {
+        this.to_parent_file_id = to_parent_file_id;
     }
 }

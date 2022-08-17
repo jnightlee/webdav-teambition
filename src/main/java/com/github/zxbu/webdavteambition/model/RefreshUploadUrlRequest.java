@@ -1,7 +1,10 @@
 package com.github.zxbu.webdavteambition.model;
 
-public class UploadFinalRequest {
+import java.util.List;
+
+public class RefreshUploadUrlRequest {
     private String drive_id;
+    private List<UploadPreRequest.PartInfo> part_info_list;
     private String file_id;
     private String upload_id;
 
@@ -11,6 +14,14 @@ public class UploadFinalRequest {
 
     public void setDrive_id(String drive_id) {
         this.drive_id = drive_id;
+    }
+
+    public List<UploadPreRequest.PartInfo> getPart_info_list() {
+        return part_info_list;
+    }
+
+    public void setPart_info_list(List<UploadPreRequest.PartInfo> part_info_list) {
+        this.part_info_list = part_info_list;
     }
 
     public String getFile_id() {

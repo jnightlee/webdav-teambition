@@ -18,6 +18,7 @@ package net.sf.webdav.methods;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -32,6 +33,8 @@ import net.sf.webdav.IWebdavStore;
 import net.sf.webdav.StoredObject;
 import net.sf.webdav.WebdavStatus;
 import net.sf.webdav.locking.ResourceLocks;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.springframework.web.util.UriUtils;
 
 public class DoGet extends DoHead {
 
@@ -61,30 +64,33 @@ public class DoGet extends DoHead {
             OutputStream out = resp.getOutputStream();
             InputStream in = _store.getResourceContent(transaction, path);
             try {
-                int read = -1;
-                byte[] copyBuffer = new byte[BUF_SIZE];
-
-                while ((read = in.read(copyBuffer, 0, copyBuffer.length)) != -1) {
-                    out.write(copyBuffer, 0, read);
+                if (in != null) {
+                    LOG.debug("开始 {}, ", path);
+                    IOUtils.copyLarge(in, out);
+                    LOG.debug("结束 {}", path);
                 }
             } finally {
                 // flushing causes a IOE if a file is opened on the webserver
                 // client disconnected before server finished sending response
                 try {
-                    in.close();
+                    if (in != null) {
+                        in.close();
+                    }
                 } catch (Exception e) {
-                    LOG.warn("Closing InputStream causes Exception!\n"
-                            + e.toString());
+                    LOG.warn("{} Closing InputStream causes Exception!\n", path
+                            ,e);
                 }
                 try {
                     out.flush();
                     out.close();
                 } catch (Exception e) {
-                    LOG.warn("Flushing OutputStream causes Exception!\n"
-                            + e.toString());
+                    LOG.warn("{} Flushing OutputStream causes Exception!\n", path
+                            ,e);
                 }
             }
         } catch (Exception e) {
+            LOG.warn("{} doBody causes Exception!\n", path
+                    ,e);
             LOG.trace(e.toString());
         }
     }
@@ -141,7 +147,7 @@ public class DoGet extends DoHead {
                     childrenTemp.append("\">");
                     childrenTemp.append("<td>");
                     childrenTemp.append("<a href=\"");
-                    childrenTemp.append(child);
+                    childrenTemp.append(UriUtils.encode(child, "utf-8"));
                     StoredObject obj= _store.getStoredObject(transaction, path+"/"+child);
                     if (obj == null)
                     {
@@ -204,7 +210,7 @@ public class DoGet extends DoHead {
     /**
      * Return the CSS styles used to display the HTML representation
      * of the webdav content.
-     * 
+     *
      * @return
      */
     protected String getCSS()
@@ -266,7 +272,7 @@ public class DoGet extends DoHead {
 
     /**
      * Return the header to be displayed in front of the folder content
-     * 
+     *
      * @param transaction
      * @param path
      * @param resp
@@ -281,7 +287,7 @@ public class DoGet extends DoHead {
 
     /**
      * Return the footer to be displayed after the folder content
-     * 
+     *
      * @param transaction
      * @param path
      * @param resp

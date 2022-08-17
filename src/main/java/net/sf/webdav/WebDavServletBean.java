@@ -1,34 +1,21 @@
 package net.sf.webdav;
 
+import net.sf.webdav.exceptions.UnauthenticatedException;
+import net.sf.webdav.exceptions.WebdavException;
+import net.sf.webdav.fromcatalina.MD5Encoder;
+import net.sf.webdav.locking.ResourceLocks;
+import net.sf.webdav.methods.*;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.util.Enumeration;
 import java.util.HashMap;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import net.sf.webdav.exceptions.UnauthenticatedException;
-import net.sf.webdav.exceptions.WebdavException;
-import net.sf.webdav.fromcatalina.MD5Encoder;
-import net.sf.webdav.locking.ResourceLocks;
-import net.sf.webdav.methods.DoCopy;
-import net.sf.webdav.methods.DoDelete;
-import net.sf.webdav.methods.DoGet;
-import net.sf.webdav.methods.DoHead;
-import net.sf.webdav.methods.DoLock;
-import net.sf.webdav.methods.DoMkcol;
-import net.sf.webdav.methods.DoMove;
-import net.sf.webdav.methods.DoNotImplemented;
-import net.sf.webdav.methods.DoOptions;
-import net.sf.webdav.methods.DoPropfind;
-import net.sf.webdav.methods.DoProppatch;
-import net.sf.webdav.methods.DoPut;
-import net.sf.webdav.methods.DoUnlock;
 
 public class WebDavServletBean extends HttpServlet {
 
@@ -122,9 +109,13 @@ public class WebDavServletBean extends HttpServlet {
         if (LOG.isTraceEnabled())
             debugRequest(methodName, req);
 
+        if (returnError(req, resp)) {
+            return;
+        }
+
         try {
             Principal userPrincipal = getUserPrincipal(req);
-            transaction = _store.begin(userPrincipal);
+            transaction = _store.begin(userPrincipal, req, resp);
             needRollback = true;
             _store.checkAuthentication(transaction);
             resp.setStatus(WebdavStatus.SC_OK);
@@ -184,15 +175,31 @@ public class WebDavServletBean extends HttpServlet {
     }
 
     /**
-     * Method that permit to customize the way 
+     * Method that permit to customize the way
      * user information are extracted from the request, default use JAAS
      * @param req
      * @return
      */
     protected Principal getUserPrincipal(HttpServletRequest req) {
-    	return req.getUserPrincipal();
+        return req.getUserPrincipal();
     }
-    
+
+    private boolean returnError(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        if (req.getRequestURI().equals("/error")) {
+            Object codeObject = req.getAttribute("javax.servlet.error.status_code");
+            if (codeObject != null) {
+                int code = Integer.parseInt(codeObject.toString());
+                if (code > 400) {
+                    resp.setStatus(code);
+                    resp.flushBuffer();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
     private void debugRequest(String methodName, HttpServletRequest req) {
         LOG.trace("-----------");
         LOG.trace("WebdavServlet\n request: methodName = " + methodName);

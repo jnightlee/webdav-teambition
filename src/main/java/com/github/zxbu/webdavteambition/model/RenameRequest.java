@@ -1,25 +1,25 @@
 package com.github.zxbu.webdavteambition.model;
 
 public class RenameRequest {
-    private String ccpFileId;
-    private String driveId;
+    private String check_name_mode = "refuse";
+    private String drive_id;
     private String name;
-    private String orgId;
+    private String file_id;
 
-    public String getCcpFileId() {
-        return ccpFileId;
+    public String getCheck_name_mode() {
+        return check_name_mode;
     }
 
-    public void setCcpFileId(String ccpFileId) {
-        this.ccpFileId = ccpFileId;
+    public void setCheck_name_mode(String check_name_mode) {
+        this.check_name_mode = check_name_mode;
     }
 
-    public String getDriveId() {
-        return driveId;
+    public String getDrive_id() {
+        return drive_id;
     }
 
-    public void setDriveId(String driveId) {
-        this.driveId = driveId;
+    public void setDrive_id(String drive_id) {
+        this.drive_id = drive_id;
     }
 
     public String getName() {
@@ -30,11 +30,11 @@ public class RenameRequest {
         this.name = name;
     }
 
-    public String getOrgId() {
-        return orgId;
+    public String getFile_id() {
+        return file_id;
     }
 
-    public void setOrgId(String orgId) {
-        this.orgId = orgId;
+    public void setFile_id(String file_id) {
+        this.file_id = file_id;
     }
 }
